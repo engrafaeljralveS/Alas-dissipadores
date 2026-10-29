@@ -36,7 +36,7 @@ build.js              monta o index.html a partir de app/
 ## Montar e testar
 
 ```
-node build.js 1.10                     # gera index.html e versoes/alas-v1.10.html
+node build.js 1.11                     # gera index.html e versoes/alas-v1.11.html
 node testes/testes-motor.js            # testes do motor de elementos finitos
 node testes/testes-paredes.js          # testes do modelo de casca das paredes
 ```
@@ -50,6 +50,7 @@ node testes/testes-paredes.js          # testes do modelo de casca das paredes
 - **v1.4**: barras no padrão aprovado (dobra + reto + dobra, duas barras espelhadas por estribo) e aba Memorial com download em Word.
 - **v1.5**: memorial com planta e corte no lugar das tabelas de geometria, 5.3 só com o cortante, sem a seção de armaduras adotadas.
 - **v1.6**: planta e corte dividem a altura do painel de dados, meio a meio.
+- **v1.11**: sem a faixa de erro no topo; Copiar para o Word deixa o memorial selecionado para Ctrl+C quando a área de transferência é bloqueada.
 - **v1.10**: armadura horizontal (N5) com o mínimo de armadura secundária da NBR 6118, Tabela 19.1 (maior entre 20 % da vertical adotada, 0,9 cm²/m e 0,5 ρ<sub>mín</sub>·b·h) e espaçamento máximo de 33 cm (item 20.1).
 - **v1.9**: memorial enxuto: a armadura horizontal das paredes entra como linha própria em 5.2 (flexo-tração e mínima) e em 5.3 (cortante, agora verificado), sem o mapa e sem o item 5.4; troca de abas independente da inicialização e aviso claro quando o Claude não libera o download do Word.
 - **v1.8**: verificação da armadura horizontal (N5) com um modelo de casca da testa e das alas pelo motor de elementos finitos (base engastada na laje, furo do tubo, topo da ala em degraus, empuxo ativo): mapa de momentos horizontais na aba Esforços, A<sub>s,nec</sub> à flexo-tração por face e por camada na aba Armaduras, itens 4.6 e 5.4 do memorial.

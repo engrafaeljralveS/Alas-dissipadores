@@ -116,15 +116,6 @@ table.res .l{text-align:left;font-family:var(--sans)}
 @media (prefers-reduced-motion: reduce){*{transition:none!important}}
 </style>
 
-<div id="app-error" role="alert" hidden style="background:var(--err-soft);color:var(--err);border-bottom:1px solid var(--err);padding:8px max(16px, env(safe-area-inset-right, 0px)) 8px max(16px, env(safe-area-inset-left, 0px));font-size:12.5px"></div>
-<script>
-// Mostra na tela qualquer erro de execução (para diagnóstico)
-(function () {
-  const show = msg => { const b = document.getElementById('app-error'); if (!b) return; b.hidden = false; b.textContent = 'Erro no Alas: ' + msg + '. Recarregue a página; se continuar, envie esta mensagem.'; };
-  window.addEventListener('error', e => show((e && e.message) || 'erro desconhecido'));
-  window.addEventListener('unhandledrejection', e => show(String(e && e.reason && (e.reason.message || e.reason)) || 'erro desconhecido'));
-})();
-</script>
 <script>
 // Troca de abas: registrada antes de qualquer cálculo, por delegação no documento,
 // para continuar funcionando mesmo se a inicialização de uma aba falhar.
@@ -505,19 +496,21 @@ table.res .l{text-align:left;font-family:var(--sans)}
   }
   const say = t => { el('mem-msg').textContent = t; clearTimeout(say.t); say.t = setTimeout(() => { el('mem-msg').textContent = ''; }, 6000); };
   const sayLong = t => { el('mem-msg').textContent = t; clearTimeout(say.t); say.t = setTimeout(() => { el('mem-msg').textContent = ''; }, 20000); };
+  // Copiar: tenta a área de transferência com formatação; se o Claude bloquear, deixa o memorial
+  // selecionado na tela para o Ctrl+C do próprio navegador, que funciona em qualquer lugar.
+  const selectMem = () => { const r = document.createRange(); r.selectNodeContents(el('mem-doc')); const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(r); el('mem-doc').scrollIntoView({ block: 'start' }); };
   el('mem-copy').addEventListener('click', async () => {
-    const text = el('mem-doc').innerText, htmlP = AlasMem.clipHtml(el('mem-doc')).then(x => new Blob([x], { type: 'text/html' }));
+    const text = el('mem-doc').innerText;
     try {
       if (!window.ClipboardItem || !navigator.clipboard || !navigator.clipboard.write) throw new Error('sem ClipboardItem');
+      const htmlP = AlasMem.clipHtml(el('mem-doc')).then(x => new Blob([x], { type: 'text/html' }));
       await navigator.clipboard.write([new ClipboardItem({ 'text/html': htmlP, 'text/plain': new Blob([text], { type: 'text/plain' }) })]);
       say('Memorial copiado. Cole no Word com Ctrl+V.');
-    } catch (e) {
-      try {
-        const r = document.createRange(); r.selectNodeContents(el('mem-doc')); const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(r);
-        const ok = document.execCommand && document.execCommand('copy');
-        say(ok ? 'Memorial copiado. Cole no Word com Ctrl+V.' : 'O memorial ficou selecionado: copie com Ctrl+C e cole no Word.');
-      } catch (e2) { say('Não foi possível copiar automaticamente: selecione o memorial e copie com Ctrl+C.'); }
-    }
+      return;
+    } catch (e) { /* bloqueado: segue para a seleção */ }
+    try { selectMem(); if (document.execCommand && document.execCommand('copy')) { say('Memorial copiado. Cole no Word com Ctrl+V.'); return; } } catch (e) {}
+    try { selectMem(); } catch (e) {}
+    sayLong('O memorial está selecionado: aperte Ctrl+C e cole no Word com Ctrl+V.');
   });
   /* ----- download do Word -----
      O arquivo é montado antes do clique (logo depois de cada atualização do memorial), para que
