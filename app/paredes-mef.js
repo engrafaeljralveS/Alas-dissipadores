@@ -67,7 +67,7 @@ const AlasMEF = (function () {
     ['testa', 'ala'].forEach(s => rec.surfNodes[s].forEach((i, j) => {
       const q = mesh.nodes[i], o = 8 * j, M1 = res[s][o], M2 = res[s][o + 1], M12 = res[s][o + 2], N1 = res[s][o + 5];
       const u = s === 'testa' ? q[0] : (q[0] - Md.xc) * Md.dir[0] + (q[1] - Md.yc) * Md.dir[1];
-      pts[s].push({ u, z: q[2], M1, M2, M12, N1, wa: wa1(M1, M2, M12) });
+      pts[s].push({ u, z: q[2], M1, M2, M12, N1, Q1: res[s][o + 3], wa: wa1(M1, M2, M12) });
     }));
     const disp = FE.displacements(sys.eq, mesh.nodes.length, U);
     return { Ka, Md, mesh, pts, disp, gauss: FE.gaussValues(mesh, sys.eq, U, { E, nu: NU }), stats: { nElem: mesh.elems.length, nEq: sys.n, ms: Date.now() - t0 }, Fx, Fy };
@@ -116,7 +116,13 @@ const AlasMEF = (function () {
     const req = Math.max(out.testa.face[0].As, out.testa.face[1].As, out.ala.face[0].As, out.ala.face[1].As);
     const AsminMax = Math.max(out.testa.Asmin, out.ala.Asmin);
     const ok = isFinite(req) && Asef >= req - 1e-9 && Asef >= AsminMax - 1e-9;
-    return { out, layers, Asef, req, AsminMax, ok, okFlex: isFinite(req) && Asef >= req - 1e-9, okMin: Asef >= AsminMax - 1e-9 };
+    // cortante horizontal (Q1) na região de dimensionamento: V_Sd = 1,4 · |Q1| ≤ V_Rd1 com a N5
+    let V = { Vk: 0 };
+    ['testa', 'ala'].forEach(s => FEres.pts[s].forEach(q => { if (zone[s](q) && Math.abs(q.Q1) > V.Vk) V = { Vk: Math.abs(q.Q1), s, u: q.u, z: q.z, h: hOf[s], d: hOf[s] - c - phi / 20 }; }));
+    if (V.s) { V.Vd = 1.4 * V.Vk; V.VR = AR.vrd1(Asef, V.d, a.fck); V.rho = Math.min(2, Asef / V.d); V.ok = V.Vd <= V.VR; } else { V.Vd = 0; V.VR = Infinity; V.ok = true; }
+    // momento horizontal característico máximo (Wood-Armer, as duas faces) na região de dimensionamento
+    const Mx = ['testa', 'ala'].flatMap(s => FEres.pts[s].filter(zone[s]).map(q => ({ s, u: q.u, z: q.z, M: Math.max(q.wa[0], q.wa[1]) }))).reduce((b, q) => (q.M > b.M ? q : b), { M: 0 });
+    return { out, layers, Asef, req, AsminMax, V, Mx, ok: ok && V.ok, okFlex: isFinite(req) && Asef >= req - 1e-9, okMin: Asef >= AsminMax - 1e-9 };
   }
 
   /* ----- mapa de M1 na elevação desenvolvida (testa | ala) ----- */
