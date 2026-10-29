@@ -125,6 +125,22 @@ table.res .l{text-align:left;font-family:var(--sans)}
   window.addEventListener('unhandledrejection', e => show(String(e && e.reason && (e.reason.message || e.reason)) || 'erro desconhecido'));
 })();
 </script>
+<script>
+// Troca de abas: registrada antes de qualquer cálculo, por delegação no documento,
+// para continuar funcionando mesmo se a inicialização de uma aba falhar.
+(function () {
+  const PANES = ['geo', 'esf', 'arm', 'mem'];
+  function show(t) {
+    if (PANES.indexOf(t) < 0) return;
+    PANES.forEach(k => { const p = document.getElementById('pane-' + k); if (p) p.hidden = k !== t; });
+    document.querySelectorAll('nav.tabs [data-tab]').forEach(b => b.setAttribute('aria-selected', String(b.dataset.tab === t)));
+    const o = document.getElementById('pane-other'); if (o) o.hidden = true;
+    try { window.scrollTo(0, 0); } catch (e) {}
+  }
+  document.addEventListener('click', e => { const b = e.target && e.target.closest && e.target.closest('nav.tabs [data-tab]'); if (b) { e.preventDefault(); show(b.dataset.tab); } });
+  window.AlasTabs = { show };
+})();
+</script>
 <header><div class="wrap"><h1>Alas</h1><span class="sub">Alas de bueiro em concreto armado: geometria, empuxos, esforços e armaduras</span><span class="ver">v1.8 · medidas em cm</span></div></header>
 <nav class="tabs" aria-label="Etapas"><div class="wrap" role="tablist">
   <button role="tab" id="tab-geo" aria-selected="true" data-tab="geo">Geometria</button>
@@ -1953,15 +1969,8 @@ if (typeof module !== 'undefined' && module.exports) module.exports = { AlasMem 
     } catch (e) { say('O download não está disponível aqui: use Copiar para o Word.'); }
   });
 
-  // abas
-  const PH = {};
-  document.querySelectorAll('nav.tabs button').forEach(b => b.addEventListener('click', () => {
-    document.querySelectorAll('nav.tabs button').forEach(x => x.setAttribute('aria-selected', String(x === b)));
-    const t = b.dataset.tab;
-    el('pane-geo').hidden = t !== 'geo'; el('pane-esf').hidden = t !== 'esf'; el('pane-arm').hidden = t !== 'arm'; el('pane-mem').hidden = t !== 'mem'; el('pane-other').hidden = !PH[t];
-    if (PH[t]) { el('ph-title').textContent = PH[t][0]; el('ph-text').textContent = PH[t][1]; }
-  }));
+  // abas: ver o script de troca de abas logo após o cabeçalho (independe desta inicialização)
 
-  render();
+  try { render(); } catch (e) { window.dispatchEvent(new ErrorEvent('error', { message: (e && e.message) || String(e) })); }
 })();
 </script>
