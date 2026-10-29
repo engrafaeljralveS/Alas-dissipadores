@@ -72,7 +72,7 @@ const AlasMem = (function () {
       ['Classe de agressividade ambiental', caa.nome], ['Cobrimento nominal adotado', f(a.cob) + ' cm'],
       ['Cobrimento mínimo (contato com o solo, Tabela 7.2)', f(caa.cob) + ' cm'], ['f<sub>ck</sub> mínimo para a classe (Tabela 7.1)', 'C' + caa.fck]
     ]);
-    h += `<h3>5.2 Flexão e armadura mínima</h3><p>Faixa de b = 100 cm, altura h igual à espessura do elemento, d = h − c − ø/2. M<sub>d</sub> = 1,4 · M<sub>k</sub>. Armadura mínima por face A<sub>s,mín</sub> = ρ<sub>mín</sub> · b · h, com ρ<sub>mín</sub> = ${fx(A.rhoMin, 3)} % (Tabela 17.3). A laje de fundo recebe no engaste o maior momento das paredes. Na linha Paredes, horizontal, a armadura N5 corre pelas alas e pela testa nas duas faces e é dimensionada à flexo-tração com o momento e a força horizontal do modelo de casca no ponto que governa; A<sub>s,mín</sub> da parede mais espessa.</p>` +
+    h += `<h3>5.2 Flexão e armadura mínima</h3><p>Faixa de b = 100 cm, altura h igual à espessura do elemento, d = h − c − ø/2. M<sub>d</sub> = 1,4 · M<sub>k</sub>. Armadura mínima por face A<sub>s,mín</sub> = ρ<sub>mín</sub> · b · h, com ρ<sub>mín</sub> = ${fx(A.rhoMin, 3)} % (Tabela 17.3). A laje de fundo recebe no engaste o maior momento das paredes. Na linha Paredes, horizontal, a armadura N5 corre pelas alas e pela testa nas duas faces e é dimensionada à flexo-tração com o momento e a força horizontal do modelo de casca no ponto que governa. Por ser armadura secundária (de distribuição), seu mínimo é o maior entre 20 % da armadura vertical adotada, 0,9 cm²/m e 0,5 ρ<sub>mín</sub> · b · h (NBR 6118, Tabela 19.1), com espaçamento máximo de 33 cm (item 20.1).</p>` +
       tbl(['Elemento', 'Armadura', 'h (cm)', 'd (cm)', 'M<sub>k</sub> (kN·m/m)', 'M<sub>d</sub> (kN·m/m)', 'x/d', 'A<sub>s,nec</sub> (cm²/m)', 'A<sub>s,mín</sub> (cm²/m)', 'A<sub>s,ef</sub> (cm²/m)', 'Situação'],
         A.rows.map(r => [r.nome + (r.k === 'lf' ? '' : ', vertical'), `ø${f(r.phi)} c/${f(r.s)}`, f(r.h), x2(r.d), x2(r.Mk), x2(r.Md), isFinite(r.xd) ? fx(r.xd, 3) : '—', isFinite(r.As) ? x2(r.As) : '—', x2(r.Asmin), `<b>${x2(r.Asef)}</b>`, st(r.it.flex && r.it.min)])
           .concat([D ? ['Paredes, horizontal', `ø${f(a.ph_phi)} c/${f(a.ph_s)}`, f(D.gov.h || Math.max(p.et, p.ea)), D.gov.d ? x2(D.gov.d) : '—', fx(D.gov.Mk || 0, 3), fx(1.4 * (D.gov.Mk || 0), 3), '—', fx(D.req, 3), x2(D.AsminMax), `<b>${x2(D.Asef)}</b>`, st(D.okFlex && D.okMin)]
@@ -88,7 +88,7 @@ const AlasMem = (function () {
     ].concat(A.rows.map(r => [`${r.nome}${r.k === 'lf' ? '' : ', vertical'}: flexão, armadura mínima, cortante e detalhamento`, `ø${f(r.phi)} c/${f(r.s)}`, r.ok]));
     h += `<h2>6. Resumo das verificações</h2>` + tbl(['Verificação', 'Valor', 'Situação'], checks.map(([n, v, ok]) => [n, v, st(ok)]).concat([['Paredes, horizontal: flexo-tração, armadura mínima, cortante e detalhamento', `ø${f(a.ph_phi)} c/${f(a.ph_s)}`, D ? st(D.ok) : 'em cálculo']]));
     if (A.warn.length) h += `<p class="mw">${A.warn.join('<br>')}</p>`;
-    h += `<p class="mf">Cálculo preliminar: valide coeficientes e hipóteses antes de uso em projeto executivo. Gerado pelo Alas v1.9 em ${today}.</p>`;
+    h += `<p class="mf">Cálculo preliminar: valide coeficientes e hipóteses antes de uso em projeto executivo. Gerado pelo Alas v1.10 em ${today}.</p>`;
     return h;
   }
 

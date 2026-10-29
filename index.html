@@ -141,7 +141,7 @@ table.res .l{text-align:left;font-family:var(--sans)}
   window.AlasTabs = { show };
 })();
 </script>
-<header><div class="wrap"><h1>Alas</h1><span class="sub">Alas de bueiro em concreto armado: geometria, empuxos, esforços e armaduras</span><span class="ver">v1.9 · medidas em cm</span></div></header>
+<header><div class="wrap"><h1>Alas</h1><span class="sub">Alas de bueiro em concreto armado: geometria, empuxos, esforços e armaduras</span><span class="ver">v1.10 · medidas em cm</span></div></header>
 <nav class="tabs" aria-label="Etapas"><div class="wrap" role="tablist">
   <button role="tab" id="tab-geo" aria-selected="true" data-tab="geo">Geometria</button>
   <button role="tab" id="tab-esf" aria-selected="false" data-tab="esf">Esforços</button>
@@ -208,7 +208,7 @@ table.res .l{text-align:left;font-family:var(--sans)}
         <div class="fig" id="fig-hz" style="max-width:640px;margin:0 auto"></div><div class="tw" id="hz-tab"></div>
         <p class="note">Planta da camada 1, que vai até a ponta das alas. A<sub>s,nec</sub> por camada: maior valor na faixa z ± s/2, pela casca. Cada camada tem duas barras, uma na face externa e uma na face interna, correndo ala, testa e ala sem emenda; nas pontas, as duas fecham com dobra de e<sub>a</sub> − 2c. As camadas de cima param onde o topo inclinado da ala chega. Nas camadas que cruzam o tubo, a barra da testa é interrompida no furo e fecha com dobra.</p></section>
       <section class="card"><h2><span class="n">3</span>Dimensionamento por faixa de 1 m <span class="esc">NBR 6118 · γ<sub>f</sub> = 1,4 · γ<sub>c</sub> = 1,4 · γ<sub>s</sub> = 1,15</span></h2><div class="tw" id="arm-res"></div>
-        <p class="note">d medido até a camada externa: d = h − c − ø/2. As,mín por face com ρ<sub>mín</sub> da Tabela 17.3. Espaçamento máximo: o menor entre 2h e 20 cm. Bitola máxima: h/8. Cortante sem estribos: V<sub>Sd</sub> ≤ V<sub>Rd1</sub> (19.4.1). A laje de fundo recebe no engaste o maior momento das paredes. A armadura horizontal (N5) é dimensionada à flexo-tração com M<sub>x</sub> e N<sub>x</sub> da casca (aba Esforços, item 5), fora do nó do encontro; o A<sub>s,mín</sub> é o da parede mais espessa.</p></section>
+        <p class="note">d medido até a camada externa: d = h − c − ø/2. As,mín por face com ρ<sub>mín</sub> da Tabela 17.3. Espaçamento máximo: o menor entre 2h e 20 cm. Bitola máxima: h/8. Cortante sem estribos: V<sub>Sd</sub> ≤ V<sub>Rd1</sub> (19.4.1). A laje de fundo recebe no engaste o maior momento das paredes. A armadura horizontal (N5) é dimensionada à flexo-tração com M<sub>x</sub> e N<sub>x</sub> da casca (aba Esforços, item 5), fora do nó do encontro. Por ser armadura secundária (de distribuição), o A<sub>s,mín</sub> da N5 é o maior entre 20 % da armadura vertical adotada, 0,9 cm²/m e 0,5 ρ<sub>mín</sub>·b·h (NBR 6118, Tabela 19.1), com espaçamento até 33 cm (item 20.1).</p></section>
     </div>
   </main>
   <main id="pane-mem" hidden>
@@ -1319,7 +1319,10 @@ const AlasMEF = (function () {
      Flexo-tração por face, b = 100 cm, h = espessura da parede, d = h − c − ø/2 (N5 por fora).
      Região de dimensionamento: fora do nó do encontro (testa até a face da ala, ala a partir
      da face da testa). Majoração γf = 1,4. */
-  function design(p, FEres, a, AR) {
+  /* Armadura mínima da N5: armadura secundária (de distribuição), NBR 6118, Tabela 19.1:
+     A_s/s ≥ 20 % da armadura principal, ≥ 0,9 cm²/m e ρ_s ≥ 0,5 ρ_mín. A principal é a vertical
+     adotada em cada parede (asPrinc = { testa, ala } em cm²/m). Espaçamento máximo 33 cm (item 20.1). */
+  function design(p, FEres, a, AR, asPrinc) {
     const fcd = a.fck / 10 / 1.4, fyd = 50 / 1.15;
     const flex = (Mkn, d) => { const M = Mkn * 100; if (!(M > 0)) return 0; const rr = 1 - M / (0.425 * 100 * d * d * fcd); if (rr < 0) return NaN; const x = 1.25 * d * (1 - Math.sqrt(rr)); return M / (fyd * (d - 0.4 * x)); };
     const flexN = (Mk, Nk, h, d) => {
@@ -1345,7 +1348,9 @@ const AlasMEF = (function () {
           if (!(best[f].As >= As)) best[f] = rec;
         });
       });
-      out[s] = { h, d, face: best, Asmin: AR.rhoMin(a.fck) / 100 * 100 * h };
+      const Ap = asPrinc && asPrinc[s] != null ? asPrinc[s] : AR.rhoMin(a.fck) * h;      // sem a principal: ρ_mín · b · h
+      const m = { p20: 0.2 * Ap, abs: 0.9, rho: 0.5 * AR.rhoMin(a.fck) / 100 * 100 * h };
+      out[s] = { h, d, face: best, Ap, minParts: m, Asmin: Math.max(m.p20, m.abs, m.rho) };
     });
     const Asef = AR.asBar(phi) * 100 / a.ph_s;
     // por camada da N5: maior As,nec em cada face na faixa z ± s/2
@@ -1484,7 +1489,7 @@ const AlasMem = (function () {
       ['Classe de agressividade ambiental', caa.nome], ['Cobrimento nominal adotado', f(a.cob) + ' cm'],
       ['Cobrimento mínimo (contato com o solo, Tabela 7.2)', f(caa.cob) + ' cm'], ['f<sub>ck</sub> mínimo para a classe (Tabela 7.1)', 'C' + caa.fck]
     ]);
-    h += `<h3>5.2 Flexão e armadura mínima</h3><p>Faixa de b = 100 cm, altura h igual à espessura do elemento, d = h − c − ø/2. M<sub>d</sub> = 1,4 · M<sub>k</sub>. Armadura mínima por face A<sub>s,mín</sub> = ρ<sub>mín</sub> · b · h, com ρ<sub>mín</sub> = ${fx(A.rhoMin, 3)} % (Tabela 17.3). A laje de fundo recebe no engaste o maior momento das paredes. Na linha Paredes, horizontal, a armadura N5 corre pelas alas e pela testa nas duas faces e é dimensionada à flexo-tração com o momento e a força horizontal do modelo de casca no ponto que governa; A<sub>s,mín</sub> da parede mais espessa.</p>` +
+    h += `<h3>5.2 Flexão e armadura mínima</h3><p>Faixa de b = 100 cm, altura h igual à espessura do elemento, d = h − c − ø/2. M<sub>d</sub> = 1,4 · M<sub>k</sub>. Armadura mínima por face A<sub>s,mín</sub> = ρ<sub>mín</sub> · b · h, com ρ<sub>mín</sub> = ${fx(A.rhoMin, 3)} % (Tabela 17.3). A laje de fundo recebe no engaste o maior momento das paredes. Na linha Paredes, horizontal, a armadura N5 corre pelas alas e pela testa nas duas faces e é dimensionada à flexo-tração com o momento e a força horizontal do modelo de casca no ponto que governa. Por ser armadura secundária (de distribuição), seu mínimo é o maior entre 20 % da armadura vertical adotada, 0,9 cm²/m e 0,5 ρ<sub>mín</sub> · b · h (NBR 6118, Tabela 19.1), com espaçamento máximo de 33 cm (item 20.1).</p>` +
       tbl(['Elemento', 'Armadura', 'h (cm)', 'd (cm)', 'M<sub>k</sub> (kN·m/m)', 'M<sub>d</sub> (kN·m/m)', 'x/d', 'A<sub>s,nec</sub> (cm²/m)', 'A<sub>s,mín</sub> (cm²/m)', 'A<sub>s,ef</sub> (cm²/m)', 'Situação'],
         A.rows.map(r => [r.nome + (r.k === 'lf' ? '' : ', vertical'), `ø${f(r.phi)} c/${f(r.s)}`, f(r.h), x2(r.d), x2(r.Mk), x2(r.Md), isFinite(r.xd) ? fx(r.xd, 3) : '—', isFinite(r.As) ? x2(r.As) : '—', x2(r.Asmin), `<b>${x2(r.Asef)}</b>`, st(r.it.flex && r.it.min)])
           .concat([D ? ['Paredes, horizontal', `ø${f(a.ph_phi)} c/${f(a.ph_s)}`, f(D.gov.h || Math.max(p.et, p.ea)), D.gov.d ? x2(D.gov.d) : '—', fx(D.gov.Mk || 0, 3), fx(1.4 * (D.gov.Mk || 0), 3), '—', fx(D.req, 3), x2(D.AsminMax), `<b>${x2(D.Asef)}</b>`, st(D.okFlex && D.okMin)]
@@ -1500,7 +1505,7 @@ const AlasMem = (function () {
     ].concat(A.rows.map(r => [`${r.nome}${r.k === 'lf' ? '' : ', vertical'}: flexão, armadura mínima, cortante e detalhamento`, `ø${f(r.phi)} c/${f(r.s)}`, r.ok]));
     h += `<h2>6. Resumo das verificações</h2>` + tbl(['Verificação', 'Valor', 'Situação'], checks.map(([n, v, ok]) => [n, v, st(ok)]).concat([['Paredes, horizontal: flexo-tração, armadura mínima, cortante e detalhamento', `ø${f(a.ph_phi)} c/${f(a.ph_s)}`, D ? st(D.ok) : 'em cálculo']]));
     if (A.warn.length) h += `<p class="mw">${A.warn.join('<br>')}</p>`;
-    h += `<p class="mf">Cálculo preliminar: valide coeficientes e hipóteses antes de uso em projeto executivo. Gerado pelo Alas v1.9 em ${today}.</p>`;
+    h += `<p class="mf">Cálculo preliminar: valide coeficientes e hipóteses antes de uso em projeto executivo. Gerado pelo Alas v1.10 em ${today}.</p>`;
     return h;
   }
 
@@ -1868,8 +1873,8 @@ if (typeof module !== 'undefined' && module.exports) module.exports = { AlasMem 
     const A = AR.check(state, lastR, astate), x2 = v => E.fx(v, 2), ok = b => `<span class="pill ${b ? 'ok' : 'no'}">${b ? 'ok' : 'não'}</span>`;
     A.hzD = null;
     if (lastFE && !lastFE.error) {
-      const D = AlasMEF.design(state, lastFE, astate, AR), hmin = Math.min(state.et, state.ea);
-      D.sMax = Math.min(2 * hmin, 20); D.phiMax = hmin * 10 / 8; D.okEsp = astate.ph_s <= D.sMax + 1e-9; D.okBit = astate.ph_phi <= D.phiMax + 1e-9;
+      const D = AlasMEF.design(state, lastFE, astate, AR, { testa: A.rows.find(r => r.k === 'te').Asef, ala: A.rows.find(r => r.k === 'pa').Asef }), hmin = Math.min(state.et, state.ea);
+      D.sMax = 33; D.phiMax = hmin * 10 / 8; D.okEsp = astate.ph_s <= D.sMax + 1e-9; D.okBit = astate.ph_phi <= D.phiMax + 1e-9;
       D.gov = ['testa', 'ala'].flatMap(s => D.out[s].face).reduce((b, q) => (q.As > b.As ? q : b), { As: 0 });
       D.ok = D.ok && D.okEsp && D.okBit; A.hzD = D; if (!D.ok) A.ok = false;
     }

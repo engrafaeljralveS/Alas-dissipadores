@@ -21,9 +21,12 @@ const soil = { gs: 18, phi: 30 }, H = 0.95, t = 0.15, E = 2.5e7, nu = 0.2, D = E
 {
   const p = AlasGeo.DEF, a = AlasArm.DEF, hm = AlasMEF.meshSize(p);
   const r1 = AlasMEF.analyze(p, soil, hm), r2 = AlasMEF.analyze(p, soil, hm / 2);
-  const d1 = AlasMEF.design(p, r1, a, AlasArm), d2 = AlasMEF.design(p, r2, a, AlasArm);
+  const Ap = { testa: AlasArm.asBar(a.te_phi) * 100 / a.te_s, ala: AlasArm.asBar(a.pa_phi) * 100 / a.pa_s };
+  const d1 = AlasMEF.design(p, r1, a, AlasArm, Ap), d2 = AlasMEF.design(p, r2, a, AlasArm, Ap);
   console.log(`2) Geometria padrão: ${r1.stats.nElem} elementos de ${(hm * 100).toFixed(1)} cm, ${r1.stats.ms} ms`);
   ok(Math.abs(d1.req - d2.req) <= 0.15 * d2.req + 1e-3, `A_s,nec horizontal ${d1.req.toFixed(3)} cm²/m (malha à metade: ${d2.req.toFixed(3)})`);
+  const m = d1.out.testa.minParts, esp = Math.max(0.2 * Ap.testa, 0.9, 0.5 * 0.150 * 15);
+  ok(Math.abs(d1.AsminMax - esp) < 1e-9, `A_s,mín da N5 (secundária, Tabela 19.1) = ${d1.AsminMax.toFixed(3)} cm²/m: 20 % ${m.p20.toFixed(3)}, 0,9, 0,5 ρmín ${m.rho.toFixed(3)}`);
   ok(d1.ok, `N5 ø${a.ph_phi} c/${a.ph_s}: A_s,ef ${d1.Asef.toFixed(2)} ≥ máx(A_s,nec, A_s,mín ${d1.AsminMax.toFixed(2)}) cm²/m`);
 }
 console.log(falhas ? `\n${falhas} teste(s) falharam.` : '\nTodos os testes passaram.');

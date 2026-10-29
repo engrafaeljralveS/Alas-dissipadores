@@ -208,7 +208,7 @@ table.res .l{text-align:left;font-family:var(--sans)}
         <div class="fig" id="fig-hz" style="max-width:640px;margin:0 auto"></div><div class="tw" id="hz-tab"></div>
         <p class="note">Planta da camada 1, que vai até a ponta das alas. A<sub>s,nec</sub> por camada: maior valor na faixa z ± s/2, pela casca. Cada camada tem duas barras, uma na face externa e uma na face interna, correndo ala, testa e ala sem emenda; nas pontas, as duas fecham com dobra de e<sub>a</sub> − 2c. As camadas de cima param onde o topo inclinado da ala chega. Nas camadas que cruzam o tubo, a barra da testa é interrompida no furo e fecha com dobra.</p></section>
       <section class="card"><h2><span class="n">3</span>Dimensionamento por faixa de 1 m <span class="esc">NBR 6118 · γ<sub>f</sub> = 1,4 · γ<sub>c</sub> = 1,4 · γ<sub>s</sub> = 1,15</span></h2><div class="tw" id="arm-res"></div>
-        <p class="note">d medido até a camada externa: d = h − c − ø/2. As,mín por face com ρ<sub>mín</sub> da Tabela 17.3. Espaçamento máximo: o menor entre 2h e 20 cm. Bitola máxima: h/8. Cortante sem estribos: V<sub>Sd</sub> ≤ V<sub>Rd1</sub> (19.4.1). A laje de fundo recebe no engaste o maior momento das paredes. A armadura horizontal (N5) é dimensionada à flexo-tração com M<sub>x</sub> e N<sub>x</sub> da casca (aba Esforços, item 5), fora do nó do encontro; o A<sub>s,mín</sub> é o da parede mais espessa.</p></section>
+        <p class="note">d medido até a camada externa: d = h − c − ø/2. As,mín por face com ρ<sub>mín</sub> da Tabela 17.3. Espaçamento máximo: o menor entre 2h e 20 cm. Bitola máxima: h/8. Cortante sem estribos: V<sub>Sd</sub> ≤ V<sub>Rd1</sub> (19.4.1). A laje de fundo recebe no engaste o maior momento das paredes. A armadura horizontal (N5) é dimensionada à flexo-tração com M<sub>x</sub> e N<sub>x</sub> da casca (aba Esforços, item 5), fora do nó do encontro. Por ser armadura secundária (de distribuição), o A<sub>s,mín</sub> da N5 é o maior entre 20 % da armadura vertical adotada, 0,9 cm²/m e 0,5 ρ<sub>mín</sub>·b·h (NBR 6118, Tabela 19.1), com espaçamento até 33 cm (item 20.1).</p></section>
     </div>
   </main>
   <main id="pane-mem" hidden>
@@ -453,8 +453,8 @@ table.res .l{text-align:left;font-family:var(--sans)}
     const A = AR.check(state, lastR, astate), x2 = v => E.fx(v, 2), ok = b => `<span class="pill ${b ? 'ok' : 'no'}">${b ? 'ok' : 'não'}</span>`;
     A.hzD = null;
     if (lastFE && !lastFE.error) {
-      const D = AlasMEF.design(state, lastFE, astate, AR), hmin = Math.min(state.et, state.ea);
-      D.sMax = Math.min(2 * hmin, 20); D.phiMax = hmin * 10 / 8; D.okEsp = astate.ph_s <= D.sMax + 1e-9; D.okBit = astate.ph_phi <= D.phiMax + 1e-9;
+      const D = AlasMEF.design(state, lastFE, astate, AR, { testa: A.rows.find(r => r.k === 'te').Asef, ala: A.rows.find(r => r.k === 'pa').Asef }), hmin = Math.min(state.et, state.ea);
+      D.sMax = 33; D.phiMax = hmin * 10 / 8; D.okEsp = astate.ph_s <= D.sMax + 1e-9; D.okBit = astate.ph_phi <= D.phiMax + 1e-9;
       D.gov = ['testa', 'ala'].flatMap(s => D.out[s].face).reduce((b, q) => (q.As > b.As ? q : b), { As: 0 });
       D.ok = D.ok && D.okEsp && D.okBit; A.hzD = D; if (!D.ok) A.ok = false;
     }

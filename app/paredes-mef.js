@@ -77,7 +77,10 @@ const AlasMEF = (function () {
      Flexo-tração por face, b = 100 cm, h = espessura da parede, d = h − c − ø/2 (N5 por fora).
      Região de dimensionamento: fora do nó do encontro (testa até a face da ala, ala a partir
      da face da testa). Majoração γf = 1,4. */
-  function design(p, FEres, a, AR) {
+  /* Armadura mínima da N5: armadura secundária (de distribuição), NBR 6118, Tabela 19.1:
+     A_s/s ≥ 20 % da armadura principal, ≥ 0,9 cm²/m e ρ_s ≥ 0,5 ρ_mín. A principal é a vertical
+     adotada em cada parede (asPrinc = { testa, ala } em cm²/m). Espaçamento máximo 33 cm (item 20.1). */
+  function design(p, FEres, a, AR, asPrinc) {
     const fcd = a.fck / 10 / 1.4, fyd = 50 / 1.15;
     const flex = (Mkn, d) => { const M = Mkn * 100; if (!(M > 0)) return 0; const rr = 1 - M / (0.425 * 100 * d * d * fcd); if (rr < 0) return NaN; const x = 1.25 * d * (1 - Math.sqrt(rr)); return M / (fyd * (d - 0.4 * x)); };
     const flexN = (Mk, Nk, h, d) => {
@@ -103,7 +106,9 @@ const AlasMEF = (function () {
           if (!(best[f].As >= As)) best[f] = rec;
         });
       });
-      out[s] = { h, d, face: best, Asmin: AR.rhoMin(a.fck) / 100 * 100 * h };
+      const Ap = asPrinc && asPrinc[s] != null ? asPrinc[s] : AR.rhoMin(a.fck) * h;      // sem a principal: ρ_mín · b · h
+      const m = { p20: 0.2 * Ap, abs: 0.9, rho: 0.5 * AR.rhoMin(a.fck) / 100 * 100 * h };
+      out[s] = { h, d, face: best, Ap, minParts: m, Asmin: Math.max(m.p20, m.abs, m.rho) };
     });
     const Asef = AR.asBar(phi) * 100 / a.ph_s;
     // por camada da N5: maior As,nec em cada face na faixa z ± s/2
