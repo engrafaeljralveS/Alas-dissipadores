@@ -1935,6 +1935,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = { AlasMem 
   function renderMem() {
     if (!lastR || !lastA) return;
     el('mem-doc').innerHTML = AlasMem.build({ p: state, soil: sstate, R: lastR, a: astate, A: lastA, info, FE: lastFE });
+    try { prebuildDocx(); } catch (e) { /* antes da inicialização do download */ }
   }
   const say = t => { el('mem-msg').textContent = t; clearTimeout(say.t); say.t = setTimeout(() => { el('mem-msg').textContent = ''; }, 6000); };
   el('mem-copy').addEventListener('click', async () => {
@@ -1951,21 +1952,43 @@ if (typeof module !== 'undefined' && module.exports) module.exports = { AlasMem 
       } catch (e2) { say('Não foi possível copiar automaticamente: selecione o memorial e copie com Ctrl+C.'); }
     }
   });
-  let dlNs;   // capacidade de download do Claude (null fora dele)
-  (async () => { try { dlNs = window.claude && window.claude.use ? await window.claude.use('downloads') : null; } catch (e) { dlNs = null; } })();
+  /* ----- download do Word -----
+     O arquivo é montado antes do clique (logo depois de cada atualização do memorial), para que
+     o pedido de download saia no próprio clique. Dentro do Claude, a capacidade "downloads" é
+     buscada no momento do clique; fora dele, usa o download comum do navegador. */
+  let dlNs = null, memBlob = null, memVer = 0, memBuilt = -1, memTimer = null;
+  const getDownloads = async () => {
+    if (dlNs) return dlNs;
+    try { const c = window.claude; if (c && typeof c.use === 'function') dlNs = await c.use('downloads'); } catch (e) { dlNs = null; }
+    return dlNs;
+  };
+  getDownloads();
+  function prebuildDocx() {
+    const v = ++memVer; clearTimeout(memTimer);
+    memTimer = setTimeout(async () => {
+      try { const b = await AlasMem.docx(el('mem-doc')); if (v === memVer) { memBlob = b; memBuilt = v; } } catch (e) { /* refeito no clique */ }
+    }, 500);
+  }
+  const DL_MSG = { declined: 'Download cancelado.', rate_limited: 'Já há um pedido de download aberto: confirme ou cancele e tente de novo.', too_large: 'O arquivo ficou grande demais para baixar aqui.', rejected_extension: 'Este formato não é aceito para download aqui.' };
   el('mem-doc-dl').addEventListener('click', async () => {
-    let blob; const name = 'memorial-alas.docx';
-    try { blob = await AlasMem.docx(el('mem-doc')); } catch (e) { say('Não foi possível montar o Word: ' + (e && e.message || e)); return; }
-    if (dlNs) {
-      try { await dlNs.save({ filename: name, data: blob }); say('Memorial salvo como ' + name + '.'); }
-      catch (e) { say(e && e.code === 'declined' ? 'Download cancelado.' : 'O download não está disponível aqui: use Copiar para o Word.'); }
+    const name = 'memorial-alas.docx';
+    const nsP = getDownloads();
+    let blob = memBuilt === memVer ? memBlob : null;
+    if (!blob) {
+      say('Montando o Word…');
+      try { blob = await AlasMem.docx(el('mem-doc')); memBlob = blob; memBuilt = memVer; } catch (e) { say('Não foi possível montar o Word: ' + ((e && e.message) || e)); return; }
+    }
+    const ns = await nsP;
+    if (ns && typeof ns.save === 'function') {
+      try { const r = await ns.save({ filename: name, data: blob }); say(r && r.status === 'delivered' ? 'Memorial enviado.' : 'Memorial salvo como ' + name + '.'); }
+      catch (e) { const c = e && e.code; say(DL_MSG[c] || ('O download não funcionou aqui' + (c ? ' (' + c + ')' : '') + ': use Copiar para o Word.')); }
       return;
     }
     try {
       const url = URL.createObjectURL(blob), lk = document.createElement('a');
       lk.href = url; lk.download = name; document.body.appendChild(lk); lk.click(); lk.remove();
       setTimeout(() => URL.revokeObjectURL(url), 4000);
-      say('Download do ' + name + ' iniciado.');
+      say('Download do ' + name + ' iniciado. Se não aparecer, use Copiar para o Word.');
     } catch (e) { say('O download não está disponível aqui: use Copiar para o Word.'); }
   });
 
