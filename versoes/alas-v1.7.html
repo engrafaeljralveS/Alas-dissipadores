@@ -116,6 +116,15 @@ table.res .l{text-align:left;font-family:var(--sans)}
 @media (prefers-reduced-motion: reduce){*{transition:none!important}}
 </style>
 
+<div id="app-error" role="alert" hidden style="background:var(--err-soft);color:var(--err);border-bottom:1px solid var(--err);padding:8px max(16px, env(safe-area-inset-right, 0px)) 8px max(16px, env(safe-area-inset-left, 0px));font-size:12.5px"></div>
+<script>
+// Mostra na tela qualquer erro de execução (para diagnóstico)
+(function () {
+  const show = msg => { const b = document.getElementById('app-error'); if (!b) return; b.hidden = false; b.textContent = 'Erro no Alas: ' + msg + '. Recarregue a página; se continuar, envie esta mensagem.'; };
+  window.addEventListener('error', e => show((e && e.message) || 'erro desconhecido'));
+  window.addEventListener('unhandledrejection', e => show(String(e && e.reason && (e.reason.message || e.reason)) || 'erro desconhecido'));
+})();
+</script>
 <header><div class="wrap"><h1>Alas</h1><span class="sub">Alas de bueiro em concreto armado: geometria, empuxos, esforços e armaduras</span><span class="ver">v1.7 · medidas em cm</span></div></header>
 <nav class="tabs" aria-label="Etapas"><div class="wrap" role="tablist">
   <button role="tab" id="tab-geo" aria-selected="true" data-tab="geo">Geometria</button>
