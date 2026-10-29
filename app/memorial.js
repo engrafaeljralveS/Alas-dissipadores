@@ -15,7 +15,7 @@ const AlasMem = (function () {
   const eq = t => `<p class="eq">${t}</p>`;
 
   function build(ctx) {
-    const { p, soil, R, a, A, info } = ctx, d = R.d, wt = R.wt, B = AR.bars(p, a), caa = AR.CAA[a.caa];
+    const { p, soil, R, a, A, info, FE } = ctx, D = A.hzD, d = R.d, wt = R.wt, B = AR.bars(p, a), caa = AR.CAA[a.caa];
     const rw = k => A.rows.find(x => x.k === k);
     const today = new Date().toLocaleDateString('pt-BR');
     let h = '';
@@ -30,7 +30,7 @@ const AlasMem = (function () {
         <li>Empuxo ativo na testa em toda a altura, do fundo da laje sob a testa até o topo; empuxo passivo no dente, na altura da laje mais o dente.</li>
         <li>Testa e alas engastadas na laje de fundo, calculadas em faixas verticais de 1 m com a altura de solo de cada faixa; o aterro acompanha o topo inclinado das alas.</li>
         <li>Tensão no solo pelo peso próprio da estrutura dividido pela área de apoio, com concreto armado a ${E.GC} kN/m³.</li>
-        <li>Dimensionamento pela ABNT NBR 6118, em faixas de 1 m, com γ<sub>f</sub> = 1,4, γ<sub>c</sub> = 1,4 e γ<sub>s</sub> = 1,15. Na testa e nas alas, a armadura dimensionada é a vertical; a armadura horizontal das paredes é adotada, sem verificação de esforço nesta versão.</li>
+        <li>Dimensionamento pela ABNT NBR 6118, em faixas de 1 m, com γ<sub>f</sub> = 1,4, γ<sub>c</sub> = 1,4 e γ<sub>s</sub> = 1,15. Na testa e nas alas, a armadura vertical é dimensionada com o modelo de faixas engastadas na laje; a armadura horizontal, com os momentos horizontais de um modelo de casca por elementos finitos (item 4.6).</li>
       </ul>`;
 
     // 2
@@ -65,6 +65,20 @@ const AlasMem = (function () {
       `<p>Área de apoio (contorno externo da laje em planta): A = ${x2(wt.A)} m².</p>
       ${eq(`σ = P / A = ${x2(wt.W)} / ${x2(wt.A)} = <b>${x2(wt.sigma)} kPa</b> (${fx(wt.sigma / 98.0665, 2)} kgf/cm²) ${R.soilOk ? '≤' : '>'} σ<sub>adm</sub> = ${f(soil.sadm)} kPa → ${st(R.soilOk)}`)}`;
 
+    // 4.6 casca
+    h += `<h3>4.6 Momentos horizontais nas paredes</h3>`;
+    if (!FE || FE.error) h += `<p>${FE && FE.error ? 'Não foi possível calcular o modelo de casca: ' + esc(FE.error) : 'Cálculo do modelo de casca em andamento.'}</p>`;
+    else {
+      h += `<p>Testa e alas modeladas como cascas pelo plano médio (elementos de 4 nós, placa de Mindlin MITC4 com membrana), ligadas no encontro, em metade da estrutura pela simetria no eixo do tubo. Base engastada na laje de fundo, furo do tubo aberto na testa e topo da ala em degraus. Carga característica: empuxo ativo K<sub>a</sub> · γ · (topo − z) na face do solo. Malha de ${fx(FE.hm * 100, 1)} cm, ${FE.stats.nElem} elementos. Momentos horizontais M<sub>x</sub> com Wood-Armer.</p>`;
+      h += `<div class="mfig" data-w="760" data-h="320">${AlasMEF.mapSvg(p, FE, 760, 320)}</div><p class="mcap">Figura 3 · Momento horizontal M<sub>x</sub> na testa e na ala desenvolvida (valores característicos)</p>`;
+      const rows = [];
+      [['testa', 'Testa'], ['ala', 'Ala']].forEach(([s2, nm]) => [0, 1].forEach(fc => {
+        const q = FE.pts[s2].reduce((b, x) => (x.wa[fc] > (b ? b.wa[fc] : -1) ? x : b), null);
+        rows.push([nm, fc ? 'oposta ao solo' : 'do solo', fx(q.wa[fc], 3), x2(q.N1), fx(q.u * 100, 1), fx(q.z * 100, 1)]);
+      }));
+      h += tbl(['Parede', 'Face tracionada', 'M<sub>x</sub> máx. (kN·m/m)', 'N<sub>x</sub> no ponto (kN/m)', 'Posição horizontal (cm)', 'z (cm)'], rows);
+    }
+
     // 5
     const fcd = a.fck / 1.4, fyd = 500 / 1.15;
     h += `<h2>5. Dimensionamento das armaduras</h2><h3>5.1 Materiais e ambiente</h3>` + tbl(['Item', 'Valor'], [
@@ -78,22 +92,28 @@ const AlasMem = (function () {
     h += `<h3>5.3 Cortante</h3><p>Verificação sem armadura transversal: V<sub>Sd</sub> = 1,4 · V<sub>k</sub> ≤ V<sub>Rd1</sub> (item 19.4.1). Na laje de fundo, o cortante não foi calculado nesta versão.</p>` +
       tbl(['Elemento', 'd (cm)', 'ρ<sub>1</sub> (%)', 'V<sub>k</sub> (kN/m)', 'V<sub>Sd</sub> (kN/m)', 'V<sub>Rd1</sub> (kN/m)', 'Situação'],
         A.rows.filter(r => r.Vd != null).map(r => [r.nome, x2(r.d), fx(Math.min(2, r.Asef / r.d), 3), x2(r.Vk), x2(r.Vd), x2(r.VR), st(r.it.cort)]), 'sm');
-    const HL = AR.hLayers(p, a), nFull = HL.filter(x => x.t >= 1).length, nFuro = HL.filter(x => x.furo).length;
-    h += `<h3>5.4 Armadura horizontal das paredes</h3><p>Armadura adotada, sem verificação de esforço nesta versão. Corre na horizontal pelas duas alas e pela testa, nas duas faces, a ${f(a.cob)} cm das faces; nas pontas das alas, as barras externa e interna fecham com dobra de ${R0(p.ea - 2 * a.cob)} cm. As camadas de cima param onde o topo inclinado da ala chega, e nas camadas que cruzam o tubo a barra da testa é interrompida no furo.</p>` +
-      tbl(['Item', 'Valor'], [
-        ['Armadura (N5)', `ø${f(a.ph_phi)} c/${f(a.ph_s)}`], ['A<sub>s,ef</sub> por face', x2(A.hz.Asef) + ' cm²/m'],
-        ['Camadas acima da laje', `${HL.length} (z = ${HL.map(x => f(x.z)).join(', ')} cm)`],
-        ['Camadas até a ponta das alas', String(nFull)], ['Camadas interrompidas no furo do tubo', String(nFuro)]
+    h += `<h3>5.4 Armadura horizontal das paredes</h3><p>Armadura N5, a ${f(a.cob)} cm das faces, correndo pelas duas alas e pela testa nas duas faces; nas pontas das alas, as barras externa e interna fecham com dobra de ${R0(p.ea - 2 * a.cob)} cm. Dimensionamento à flexo-tração com M<sub>d</sub> = 1,4 · M<sub>x</sub> e N<sub>d</sub> = 1,4 · N<sub>x</sub> do item 4.6, em cada face, fora do nó do encontro; d = h − c − ø/2. A armadura mínima é a da parede mais espessa.</p>`;
+    const HL = AR.hLayers(p, a);
+    if (!D) h += `<p>Verificação em andamento (cálculo do modelo de casca).</p>`;
+    else {
+      const g = D.gov;
+      h += tbl(['Item', 'Valor'], [
+        ['Armadura adotada (N5)', `ø${f(a.ph_phi)} c/${f(a.ph_s)}, ${HL.length} camadas (z = ${HL.map(x => f(x.z)).join(', ')} cm)`],
+        ['Ponto que governa', g.s ? `${g.s === 'testa' ? 'testa' : 'ala'}, face ${g.f ? 'oposta ao solo' : 'do solo'}, z = ${fx(g.z * 100, 1)} cm: M<sub>x</sub> = ${fx(g.Mk, 3)} kN·m/m, N<sub>x</sub> = ${x2(g.Nk)} kN/m` : '—'],
+        ['A<sub>s,nec</sub> (flexo-tração)', fx(D.req, 3) + ' cm²/m'], ['A<sub>s,mín</sub> por face', x2(D.AsminMax) + ' cm²/m'], ['A<sub>s,ef</sub> por face', x2(D.Asef) + ' cm²/m'],
+        ['Espaçamento ≤ s<sub>máx</sub>', `${f(a.ph_s)} ≤ ${f(D.sMax)} cm`], ['Bitola ≤ h/8', `${f(a.ph_phi)} ≤ ${fx(D.phiMax, 1)} mm`],
+        ['Situação', st(D.ok)]
       ]);
+    }
 
     // 7
     const checks = [
       ['Equilíbrio dos empuxos, E<sub>p</sub> / E<sub>a</sub> ≥ 1', `${x2(R.FS)}`, R.ok],
       ['Tensão no solo, σ ≤ σ<sub>adm</sub>', `${x2(wt.sigma)} ≤ ${f(soil.sadm)} kPa`, R.soilOk]
     ].concat(A.rows.map(r => [`${r.nome}${r.k === 'lf' ? '' : ' (vertical)'}: flexão, armadura mínima, cortante e detalhamento`, `ø${f(r.phi)} c/${f(r.s)}`, r.ok]));
-    h += `<h2>6. Resumo das verificações</h2>` + tbl(['Verificação', 'Valor', 'Situação'], checks.map(([n, v, ok]) => [n, v, st(ok)]).concat([['Paredes, armadura horizontal (N5)', `ø${f(a.ph_phi)} c/${f(a.ph_s)}`, '<span style="color:#5b6676">adotada, sem verificação</span>']]));
+    h += `<h2>6. Resumo das verificações</h2>` + tbl(['Verificação', 'Valor', 'Situação'], checks.map(([n, v, ok]) => [n, v, st(ok)]).concat([['Paredes, armadura horizontal (N5): flexo-tração, armadura mínima e detalhamento', `ø${f(a.ph_phi)} c/${f(a.ph_s)}`, D ? st(D.ok) : 'em cálculo']]));
     if (A.warn.length) h += `<p class="mw">${A.warn.join('<br>')}</p>`;
-    h += `<p class="mf">Cálculo preliminar: valide coeficientes e hipóteses antes de uso em projeto executivo. Gerado pelo Alas v1.7 em ${today}.</p>`;
+    h += `<p class="mf">Cálculo preliminar: valide coeficientes e hipóteses antes de uso em projeto executivo. Gerado pelo Alas v1.8 em ${today}.</p>`;
     return h;
   }
 

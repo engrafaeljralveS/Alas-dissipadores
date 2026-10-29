@@ -125,7 +125,7 @@ table.res .l{text-align:left;font-family:var(--sans)}
   window.addEventListener('unhandledrejection', e => show(String(e && e.reason && (e.reason.message || e.reason)) || 'erro desconhecido'));
 })();
 </script>
-<header><div class="wrap"><h1>Alas</h1><span class="sub">Alas de bueiro em concreto armado: geometria, empuxos, esforços e armaduras</span><span class="ver">v1.7 · medidas em cm</span></div></header>
+<header><div class="wrap"><h1>Alas</h1><span class="sub">Alas de bueiro em concreto armado: geometria, empuxos, esforços e armaduras</span><span class="ver">v1.8 · medidas em cm</span></div></header>
 <nav class="tabs" aria-label="Etapas"><div class="wrap" role="tablist">
   <button role="tab" id="tab-geo" aria-selected="true" data-tab="geo">Geometria</button>
   <button role="tab" id="tab-esf" aria-selected="false" data-tab="esf">Esforços</button>
@@ -171,6 +171,9 @@ table.res .l{text-align:left;font-family:var(--sans)}
       <section class="card"><h2><span class="n">3</span>Resumo dos esforços</h2><div class="tw" id="tab-esf-res"></div></section>
       <section class="card"><h2><span class="n">4</span>Tensão no solo <span class="esc">peso próprio ÷ área de apoio</span></h2><div class="tw" id="tab-solo"></div>
         <p class="note">Peso do concreto armado com γ<sub>c</sub> = 25 kN/m³. A área de apoio é o contorno externo da laje de fundo em planta (testa mais o trapézio das alas). Sem o lastro, o solo sobre a estrutura e a água no bueiro.</p></section>
+      <section class="card"><h2><span class="n">5</span>Momentos horizontais nas paredes <span class="esc" id="mef-status">elementos finitos de casca</span></h2>
+        <div class="fig" id="fig-mef"></div><div class="tw" id="mef-tab"></div>
+        <p class="note">Testa e alas como cascas ligadas no encontro, em metade da estrutura (simetria no eixo do tubo), base engastada na laje de fundo, furo do tubo aberto e topo da ala em degraus. Carga: empuxo ativo K<sub>a</sub>·γ·(topo − z) na face do solo. Momento horizontal M<sub>x</sub> com Wood-Armer; ele dimensiona a armadura horizontal (N5) na aba Armaduras. Valores característicos.</p></section>
     </div>
   </main>
   <main id="pane-arm" hidden>
@@ -187,9 +190,9 @@ table.res .l{text-align:left;font-family:var(--sans)}
         <p class="note">Cada posição é uma barra com dobra + reto + dobra; a dobra é a espessura do elemento menos os dois cobrimentos. A segunda barra é a mesma, espelhada na face oposta, e as duas juntas fecham o estribo (no corte, a tracejada é a espelhada). Medidas pelas faces externas das barras, sem ganchos nem traspasse.</p></section>
       <section class="card"><h2><span class="n">2</span>Armadura horizontal N5 <span class="esc" id="hz-sum"></span></h2>
         <div class="fig" id="fig-hz" style="max-width:640px;margin:0 auto"></div><div class="tw" id="hz-tab"></div>
-        <p class="note">Planta da camada 1, que vai até a ponta das alas. Cada camada tem duas barras, uma na face externa e uma na face interna, correndo ala, testa e ala sem emenda; nas pontas, as duas fecham com dobra de e<sub>a</sub> − 2c. As camadas de cima param onde o topo inclinado da ala chega. Nas camadas que cruzam o tubo, a barra da testa é interrompida no furo e fecha com dobra.</p></section>
+        <p class="note">Planta da camada 1, que vai até a ponta das alas. A<sub>s,nec</sub> por camada: maior valor na faixa z ± s/2, pela casca. Cada camada tem duas barras, uma na face externa e uma na face interna, correndo ala, testa e ala sem emenda; nas pontas, as duas fecham com dobra de e<sub>a</sub> − 2c. As camadas de cima param onde o topo inclinado da ala chega. Nas camadas que cruzam o tubo, a barra da testa é interrompida no furo e fecha com dobra.</p></section>
       <section class="card"><h2><span class="n">3</span>Dimensionamento por faixa de 1 m <span class="esc">NBR 6118 · γ<sub>f</sub> = 1,4 · γ<sub>c</sub> = 1,4 · γ<sub>s</sub> = 1,15</span></h2><div class="tw" id="arm-res"></div>
-        <p class="note">d medido até a camada externa: d = h − c − ø/2. As,mín por face com ρ<sub>mín</sub> da Tabela 17.3. Espaçamento máximo: o menor entre 2h e 20 cm. Bitola máxima: h/8. Cortante sem estribos: V<sub>Sd</sub> ≤ V<sub>Rd1</sub> (19.4.1). A laje de fundo recebe no engaste o maior momento das paredes.</p></section>
+        <p class="note">d medido até a camada externa: d = h − c − ø/2. As,mín por face com ρ<sub>mín</sub> da Tabela 17.3. Espaçamento máximo: o menor entre 2h e 20 cm. Bitola máxima: h/8. Cortante sem estribos: V<sub>Sd</sub> ≤ V<sub>Rd1</sub> (19.4.1). A laje de fundo recebe no engaste o maior momento das paredes. A armadura horizontal (N5) é dimensionada à flexo-tração com M<sub>x</sub> e N<sub>x</sub> da casca (aba Esforços, item 5), fora do nó do encontro; o A<sub>s,mín</sub> é o da parede mais espessa.</p></section>
     </div>
   </main>
   <main id="pane-mem" hidden>
@@ -223,6 +226,12 @@ table.res .l{text-align:left;font-family:var(--sans)}
 </script>
 <script>
 /*__ARMADURAS__*/
+</script>
+<script>
+/*__MOTOR__*/
+</script>
+<script>
+/*__PAREDES__*/
 </script>
 <script>
 /*__MEMORIAL__*/
@@ -297,6 +306,36 @@ table.res .l{text-align:left;font-family:var(--sans)}
     return e;
   }
   let lastR = null;
+  /* ----- casca das paredes (elementos finitos), recalculada 300 ms após a última mudança ----- */
+  let lastFE = null, feKey = null, feTimer = null, feFirst = true;
+  function ensureFE() {
+    const key = JSON.stringify([state, sstate.gs, sstate.phi]);
+    if (key === feKey) return;
+    feKey = key; lastFE = null; clearTimeout(feTimer);
+    el('mef-status').textContent = 'calculando…';
+    feTimer = setTimeout(() => {
+      try { const hm = AlasMEF.meshSize(state); lastFE = AlasMEF.analyze(state, sstate, hm); lastFE.hm = hm; }
+      catch (e) { lastFE = { error: String((e && e.message) || e) }; }
+      renderFE(); renderArm();
+    }, feFirst ? 0 : 300);
+    feFirst = false;
+    renderFE();
+  }
+  function renderFE() {
+    const x3 = v => E.fx(v, 3);
+    if (!lastFE) { el('fig-mef').innerHTML = '<p class="note" style="padding:16px">Calculando os momentos nas paredes…</p>'; el('mef-tab').innerHTML = ''; return; }
+    if (lastFE.error) { el('mef-status').textContent = 'erro no cálculo'; el('fig-mef').innerHTML = `<div class="alert">Não foi possível calcular as paredes: ${lastFE.error}</div>`; el('mef-tab').innerHTML = ''; return; }
+    const st = lastFE.stats;
+    el('mef-status').textContent = `${st.nElem} elementos de ${E.fx(lastFE.hm * 100, 1)} cm · ${st.nEq} equações · ${st.ms} ms`;
+    el('fig-mef').innerHTML = AlasMEF.mapSvg(state, lastFE, 760, 320);
+    const rows = [];
+    [['testa', 'Testa'], ['ala', 'Ala']].forEach(([s, nm]) => [0, 1].forEach(fc => {
+      const q = lastFE.pts[s].reduce((b, x) => (x.wa[fc] > (b ? b.wa[fc] : -1) ? x : b), null);
+      rows.push(`<tr><td class="l">${nm}</td><td class="l">${fc ? 'face oposta ao solo' : 'face do solo'}</td><td>${x3(q.wa[fc])}</td><td>${E.fx(q.N1, 2)}</td><td>${E.fx(q.u * 100, 1)}</td><td>${E.fx(q.z * 100, 1)}</td></tr>`);
+    }));
+    el('mef-tab').innerHTML = `<table class="res"><thead><tr><th class="l">Parede</th><th class="l">Face tracionada</th><th>M<sub>x</sub> máx. (kN·m/m)</th><th>N<sub>x</sub> no ponto (kN/m)</th><th>Posição horizontal (cm)</th><th>Altura z (cm)</th></tr></thead><tbody>${rows.join('')}</tbody></table>
+      <p class="note" style="padding:6px 6px 0">Posição horizontal: na testa, a partir do eixo do tubo; na ala, a partir do encontro com a testa, ao longo da ala. N<sub>x</sub> &gt; 0 é tração.</p>`;
+  }
   function renderEsf() {
     const s = Object.assign({}, sstate, sraw), errs = validateSoil(s);
     Object.keys(E.SDEF).forEach(k => { el('f-' + k).classList.toggle('bad', !!errs[k]); el('m-' + k).textContent = errs[k] || ''; });
@@ -316,6 +355,7 @@ table.res .l{text-align:left;font-family:var(--sans)}
       <tr><td class="l">Tensão média no solo</td><td class="l">σ = peso ÷ área</td><td>${x2(wt.sigma)} kPa</td><td><span class="pill ${R.soilOk ? 'ok' : 'no'}">${R.soilOk ? '≤ σadm, atende' : '> σadm, não atende'}</span></td></tr></tbody></table>`;
     el('fig-emp').innerHTML = E.cutLoads(q, R, 760, 430);
     lastR = R;
+    ensureFE();
     el('fig-ala').innerHTML = E.wingChart(q, R, 760, 470);
     const c = x2;
     const rowsE = [
@@ -395,14 +435,22 @@ table.res .l{text-align:left;font-family:var(--sans)}
     el('alerts-arm').innerHTML = n ? `<div class="alert">${n === 1 ? 'Um campo precisa' : n + ' campos precisam'} de ajuste. O dimensionamento usa os últimos valores válidos.</div>` : '';
     if (!n) { astate = a; araw = {}; try { localStorage.setItem(AKEY, JSON.stringify(astate)); } catch (e) {} }
     const A = AR.check(state, lastR, astate), x2 = v => E.fx(v, 2), ok = b => `<span class="pill ${b ? 'ok' : 'no'}">${b ? 'ok' : 'não'}</span>`;
-    const bad = A.rows.filter(r => !r.ok).map(r => r.nome.toLowerCase());
-    el('verif-arm').innerHTML = `<div class="verif ${A.ok && !A.warn.length ? 'ok' : 'no'}"><span>${A.ok ? 'As três armaduras atendem às verificações.' : 'Não atende: ' + bad.join(', ') + '. Veja a tabela.'}</span>${A.warn.map(w => `<span>${w}</span>`).join('')}</div>`;
+    A.hzD = null;
+    if (lastFE && !lastFE.error) {
+      const D = AlasMEF.design(state, lastFE, astate, AR), hmin = Math.min(state.et, state.ea);
+      D.sMax = Math.min(2 * hmin, 20); D.phiMax = hmin * 10 / 8; D.okEsp = astate.ph_s <= D.sMax + 1e-9; D.okBit = astate.ph_phi <= D.phiMax + 1e-9;
+      D.gov = ['testa', 'ala'].flatMap(s => D.out[s].face).reduce((b, q) => (q.As > b.As ? q : b), { As: 0 });
+      D.ok = D.ok && D.okEsp && D.okBit; A.hzD = D; if (!D.ok) A.ok = false;
+    }
+    const bad = A.rows.filter(r => !r.ok).map(r => r.nome.toLowerCase()).concat(A.hzD && !A.hzD.ok ? ['armadura horizontal (N5)'] : []);
+    const pend = !A.hzD ? '<span>A armadura horizontal está sendo verificada (cálculo das paredes em andamento).</span>' : '';
+    el('verif-arm').innerHTML = `<div class="verif ${A.ok && !A.warn.length ? 'ok' : 'no'}"><span>${A.ok ? (A.hzD ? 'As quatro armaduras atendem às verificações.' : 'As três armaduras verticais e da laje atendem às verificações.') : 'Não atende: ' + bad.join(', ') + '. Veja a tabela.'}</span>${pend}${A.warn.map(w => `<span>${w}</span>`).join('')}</div>`;
     el('fig-arm').innerHTML = AR.cutBars(state, A, astate);
     const BB = AR.bars(state, astate), rw = key => A.rows.find(x => x.k === key), R0 = v => f(Math.round(v));
     const HL = AR.hLayers(state, astate);
     el('fig-hz').innerHTML = AR.planHz(state, astate, 560, 400);
-    el('hz-tab').innerHTML = `<table class="res"><thead><tr><th class="l">Camada</th><th>z acima da laje (cm)</th><th class="l">Extensão</th><th>Externa: reto (cm)</th><th>Interna: reto (cm)</th><th>Dobras nas pontas (cm)</th><th class="l">Na testa</th></tr></thead><tbody>${HL.map((R, i) => `<tr><td class="l">${i + 1}</td><td>${f(R.z)}</td><td class="l">${R.t >= 1 ? 'até a ponta das alas' : 'até ' + Math.round(R.t * 100) + ' % da ala'}</td><td>${R0(R.LO)}</td><td>${R0(R.LI)}</td><td>${R0(R.dob)} + ${R0(R.dob)}</td><td class="l">${R.furo ? 'interrompida no furo do tubo' : 'contínua'}</td></tr>`).join('')}</tbody></table>`;
-    el('hz-sum').innerHTML = `<b style="color:var(--hz)">N5</b> ø${f(astate.ph_phi)} c/${f(astate.ph_s)} · ${HL.length} camada${HL.length === 1 ? '' : 's'} · A<sub>s,ef</sub> = ${x2(A.hz.Asef)} cm²/m por face`;
+    el('hz-tab').innerHTML = `<table class="res"><thead><tr><th class="l">Camada</th><th>z acima da laje (cm)</th><th class="l">Extensão</th><th>Externa: reto (cm)</th><th>Interna: reto (cm)</th><th>Dobras nas pontas (cm)</th><th class="l">Na testa</th><th>A<sub>s,nec</sub> face do solo (cm²/m)</th><th>A<sub>s,nec</sub> face oposta (cm²/m)</th></tr></thead><tbody>${HL.map((R, i) => { const Ly = A.hzD && A.hzD.layers[i]; return `<tr><td class="l">${i + 1}</td><td>${f(R.z)}</td><td class="l">${R.t >= 1 ? 'até a ponta das alas' : 'até ' + Math.round(R.t * 100) + ' % da ala'}</td><td>${R0(R.LO)}</td><td>${R0(R.LI)}</td><td>${R0(R.dob)} + ${R0(R.dob)}</td><td class="l">${R.furo ? 'interrompida no furo do tubo' : 'contínua'}</td><td>${Ly ? E.fx(Ly.soil.As, 3) : '…'}</td><td>${Ly ? E.fx(Ly.inner.As, 3) : '…'}</td></tr>`; }).join('')}</tbody></table>`;
+    el('hz-sum').innerHTML = `<b style="color:var(--hz)">N5</b> ø${f(astate.ph_phi)} c/${f(astate.ph_s)} · ${HL.length} camada${HL.length === 1 ? '' : 's'} · A<sub>s,ef</sub> = ${x2(A.hz.Asef)} cm²/m por face${A.hzD ? ` · A<sub>s,nec</sub> = ${E.fx(A.hzD.req, 3)}, A<sub>s,mín</sub> = ${x2(A.hzD.AsminMax)} cm²/m` : ''}`;
     lastA = A;
     renderMem();
     el('arm-pos').innerHTML = `<table class="res"><thead><tr><th class="l">Posição</th><th class="l">Elemento</th><th class="l">Armadura</th><th class="l">Forma</th><th>Dobra + reto + dobra (cm)</th><th>Cada barra (cm)</th><th>Barras por estribo</th></tr></thead><tbody>${BB.map(b => `<tr><td class="l"><b style="color:var(${b.n === 'N4' ? '--aco2' : '--aco'})">${b.n}</b></td><td class="l">${b.el}</td><td class="l">ø${f(rw(b.k).phi)} c/${f(rw(b.k).s)}</td><td class="l" style="white-space:normal;min-width:240px">${b.form}</td><td>${R0(b.dob)} + ${R0(b.reto)}${b.reto1 != null ? ' a ' + R0(b.reto1) : ''} + ${R0(b.dob)}</td><td>${R0(b.L)}${b.Lmin != null ? ' a ' + R0(b.Lmin) : ''}</td><td>2</td></tr>`).join('')}</tbody></table>`;
@@ -412,7 +460,10 @@ table.res .l{text-align:left;font-family:var(--sans)}
       <td>${f(r.h)}</td><td>${x2(r.d)}</td><td>${x2(r.Mk)}</td><td>${x2(r.Md)}</td><td>${isFinite(r.xd) ? E.fx(r.xd, 3) : '—'}</td>
       <td>${isFinite(r.As) ? x2(r.As) : '—'}</td><td>${x2(r.Asmin)}</td><td><b>${x2(r.Asef)}</b></td>
       <td>${ok(r.it.flex)}</td><td>${ok(r.it.min)}</td><td>${ok(r.it.esp)} <span style="color:var(--muted)">${f(r.sMax)}</span></td><td>${ok(r.it.bit)} <span style="color:var(--muted)">${f(r.phiMax)}</span></td>
-      <td>${r.Vd == null ? '—' : x2(r.Vd)}</td><td>${r.Vd == null ? '—' : x2(r.VR)}</td><td>${r.Vd == null ? '—' : ok(r.it.cort)}</td></tr>`).join('')}</tbody></table>`;
+      <td>${r.Vd == null ? '—' : x2(r.Vd)}</td><td>${r.Vd == null ? '—' : x2(r.VR)}</td><td>${r.Vd == null ? '—' : ok(r.it.cort)}</td></tr>`).join('')}${(() => { const D = A.hzD; if (!D) return `<tr><td class="l">Paredes, horizontal (N5)<br><span style="color:var(--muted);font-size:11px">casca: calculando…</span></td><td class="l"><b>ø${f(astate.ph_phi)} c/${f(astate.ph_s)}</b></td>${'<td>…</td>'.repeat(15)}</tr>`; const g = D.gov;
+      return `<tr><td class="l">Paredes, horizontal (N5)<br><span style="color:var(--muted);font-size:11px">casca: ${g.s === 'testa' ? 'testa' : 'ala'}, ${g.f ? 'face oposta' : 'face do solo'}, z = ${E.fx((g.z || 0) * 100, 1)} cm</span></td><td class="l"><b>ø${f(astate.ph_phi)} c/${f(astate.ph_s)}</b></td>
+      <td>${f(g.h || Math.min(state.et, state.ea))}</td><td>${g.d ? x2(g.d) : '—'}</td><td>${E.fx(g.Mk || 0, 3)}</td><td>${E.fx(1.4 * (g.Mk || 0), 3)}</td><td>—</td><td>${E.fx(D.req, 3)}</td><td>${x2(D.AsminMax)}</td><td><b>${x2(D.Asef)}</b></td>
+      <td>${ok(D.okFlex)}</td><td>${ok(D.okMin)}</td><td>${ok(D.okEsp)} <span style="color:var(--muted)">${f(D.sMax)}</span></td><td>${ok(D.okBit)} <span style="color:var(--muted)">${f(D.phiMax)}</span></td><td>—</td><td>—</td><td>—</td></tr>`; })()}</tbody></table>`;
   }
   ['fck', 'caa'].concat(AK.map(k => k + '_phi')).forEach(k => el('in-' + k).addEventListener('change', ev => {
     const v = ev.target.value; araw[k] = k === 'caa' ? v : parseFloat(v);
@@ -433,7 +484,7 @@ table.res .l{text-align:left;font-family:var(--sans)}
   ['obra', 'local', 'resp'].forEach(k => { const inp = el('in-' + k); inp.value = info[k]; inp.addEventListener('input', () => { info[k] = inp.value; try { localStorage.setItem(MKEY, JSON.stringify(info)); } catch (e) {} renderMem(); }); });
   function renderMem() {
     if (!lastR || !lastA) return;
-    el('mem-doc').innerHTML = AlasMem.build({ p: state, soil: sstate, R: lastR, a: astate, A: lastA, info });
+    el('mem-doc').innerHTML = AlasMem.build({ p: state, soil: sstate, R: lastR, a: astate, A: lastA, info, FE: lastFE });
   }
   const say = t => { el('mem-msg').textContent = t; clearTimeout(say.t); say.t = setTimeout(() => { el('mem-msg').textContent = ''; }, 6000); };
   el('mem-copy').addEventListener('click', async () => {

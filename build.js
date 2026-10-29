@@ -4,8 +4,8 @@
 const fs = require('fs'), path = require('path');
 const dir = __dirname, rd = f => fs.readFileSync(path.join(dir, f), 'utf8');
 let html = rd('app/app-template.html');
-[['DESENHO', 'desenho'], ['ESFORCOS', 'esforcos'], ['ARMADURAS', 'armaduras'], ['MEMORIAL', 'memorial']]
-  .forEach(([k, f]) => { html = html.replace(`/*__${k}__*/`, () => rd(`app/${f}.js`)); });
+[['DESENHO', 'app/desenho'], ['ESFORCOS', 'app/esforcos'], ['ARMADURAS', 'app/armaduras'], ['MOTOR', 'motor/motor-mef'], ['PAREDES', 'app/paredes-mef'], ['MEMORIAL', 'app/memorial']]
+  .forEach(([k, f]) => { html = html.replace(`/*__${k}__*/`, () => rd(`${f}.js`)); });
 const ver = process.argv[2];
 if (ver) html = html.replace(/v\d+\.\d+ · medidas em cm/, `v${ver} · medidas em cm`);
 fs.writeFileSync(path.join(dir, 'index.html'), html);

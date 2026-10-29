@@ -20,12 +20,14 @@ app/
   desenho.js          geometria e desenho da planta e do corte (SVG)
   esforcos.js         empuxos, paredes engastadas, peso próprio e tensão no solo
   armaduras.js        dimensionamento NBR 6118 e posições das barras
+  paredes-mef.js      testa e alas como cascas no motor: momentos horizontais e dimensionamento da N5
   memorial.js         memorial em HTML e geração do .docx
 motor/
   motor-mef.js        motor de elementos finitos de casca (extraído do Flutuação em Caixas v3.10)
   modelo-caixa.js     exemplo: o modelo da caixa enterrada sobre o motor
 testes/
   testes-motor.js     testes do motor
+  testes-paredes.js   testes do modelo de casca das paredes
 versoes/              cada versão salva, de v1.0 em diante
 layout/               propostas de layout e esboços aprovados
 build.js              monta o index.html a partir de app/
@@ -36,6 +38,7 @@ build.js              monta o index.html a partir de app/
 ```
 node build.js 1.7                      # gera index.html e versoes/alas-v1.7.html
 node testes/testes-motor.js            # testes do motor de elementos finitos
+node testes/testes-paredes.js          # testes do modelo de casca das paredes
 ```
 
 ## Versões
@@ -47,6 +50,7 @@ node testes/testes-motor.js            # testes do motor de elementos finitos
 - **v1.4**: barras no padrão aprovado (dobra + reto + dobra, duas barras espelhadas por estribo) e aba Memorial com download em Word.
 - **v1.5**: memorial com planta e corte no lugar das tabelas de geometria, 5.3 só com o cortante, sem a seção de armaduras adotadas.
 - **v1.6**: planta e corte dividem a altura do painel de dados, meio a meio.
+- **v1.8**: verificação da armadura horizontal (N5) com um modelo de casca da testa e das alas pelo motor de elementos finitos (base engastada na laje, furo do tubo, topo da ala em degraus, empuxo ativo): mapa de momentos horizontais na aba Esforços, A<sub>s,nec</sub> à flexo-tração por face e por camada na aba Armaduras, itens 4.6 e 5.4 do memorial.
 - **v1.7**: armadura horizontal das paredes (N5): bitola e espaçamento próprios, corre pelas duas alas e pela testa nas duas faces, com camadas, planta e tabela na aba Armaduras e item 5.4 no memorial. Testa e paredes passam a definir só a armadura vertical.
 
 ## Premissas

@@ -125,7 +125,7 @@ table.res .l{text-align:left;font-family:var(--sans)}
   window.addEventListener('unhandledrejection', e => show(String(e && e.reason && (e.reason.message || e.reason)) || 'erro desconhecido'));
 })();
 </script>
-<header><div class="wrap"><h1>Alas</h1><span class="sub">Alas de bueiro em concreto armado: geometria, empuxos, esforços e armaduras</span><span class="ver">v1.7 · medidas em cm</span></div></header>
+<header><div class="wrap"><h1>Alas</h1><span class="sub">Alas de bueiro em concreto armado: geometria, empuxos, esforços e armaduras</span><span class="ver">v1.8 · medidas em cm</span></div></header>
 <nav class="tabs" aria-label="Etapas"><div class="wrap" role="tablist">
   <button role="tab" id="tab-geo" aria-selected="true" data-tab="geo">Geometria</button>
   <button role="tab" id="tab-esf" aria-selected="false" data-tab="esf">Esforços</button>
@@ -171,6 +171,9 @@ table.res .l{text-align:left;font-family:var(--sans)}
       <section class="card"><h2><span class="n">3</span>Resumo dos esforços</h2><div class="tw" id="tab-esf-res"></div></section>
       <section class="card"><h2><span class="n">4</span>Tensão no solo <span class="esc">peso próprio ÷ área de apoio</span></h2><div class="tw" id="tab-solo"></div>
         <p class="note">Peso do concreto armado com γ<sub>c</sub> = 25 kN/m³. A área de apoio é o contorno externo da laje de fundo em planta (testa mais o trapézio das alas). Sem o lastro, o solo sobre a estrutura e a água no bueiro.</p></section>
+      <section class="card"><h2><span class="n">5</span>Momentos horizontais nas paredes <span class="esc" id="mef-status">elementos finitos de casca</span></h2>
+        <div class="fig" id="fig-mef"></div><div class="tw" id="mef-tab"></div>
+        <p class="note">Testa e alas como cascas ligadas no encontro, em metade da estrutura (simetria no eixo do tubo), base engastada na laje de fundo, furo do tubo aberto e topo da ala em degraus. Carga: empuxo ativo K<sub>a</sub>·γ·(topo − z) na face do solo. Momento horizontal M<sub>x</sub> com Wood-Armer; ele dimensiona a armadura horizontal (N5) na aba Armaduras. Valores característicos.</p></section>
     </div>
   </main>
   <main id="pane-arm" hidden>
@@ -187,9 +190,9 @@ table.res .l{text-align:left;font-family:var(--sans)}
         <p class="note">Cada posição é uma barra com dobra + reto + dobra; a dobra é a espessura do elemento menos os dois cobrimentos. A segunda barra é a mesma, espelhada na face oposta, e as duas juntas fecham o estribo (no corte, a tracejada é a espelhada). Medidas pelas faces externas das barras, sem ganchos nem traspasse.</p></section>
       <section class="card"><h2><span class="n">2</span>Armadura horizontal N5 <span class="esc" id="hz-sum"></span></h2>
         <div class="fig" id="fig-hz" style="max-width:640px;margin:0 auto"></div><div class="tw" id="hz-tab"></div>
-        <p class="note">Planta da camada 1, que vai até a ponta das alas. Cada camada tem duas barras, uma na face externa e uma na face interna, correndo ala, testa e ala sem emenda; nas pontas, as duas fecham com dobra de e<sub>a</sub> − 2c. As camadas de cima param onde o topo inclinado da ala chega. Nas camadas que cruzam o tubo, a barra da testa é interrompida no furo e fecha com dobra.</p></section>
+        <p class="note">Planta da camada 1, que vai até a ponta das alas. A<sub>s,nec</sub> por camada: maior valor na faixa z ± s/2, pela casca. Cada camada tem duas barras, uma na face externa e uma na face interna, correndo ala, testa e ala sem emenda; nas pontas, as duas fecham com dobra de e<sub>a</sub> − 2c. As camadas de cima param onde o topo inclinado da ala chega. Nas camadas que cruzam o tubo, a barra da testa é interrompida no furo e fecha com dobra.</p></section>
       <section class="card"><h2><span class="n">3</span>Dimensionamento por faixa de 1 m <span class="esc">NBR 6118 · γ<sub>f</sub> = 1,4 · γ<sub>c</sub> = 1,4 · γ<sub>s</sub> = 1,15</span></h2><div class="tw" id="arm-res"></div>
-        <p class="note">d medido até a camada externa: d = h − c − ø/2. As,mín por face com ρ<sub>mín</sub> da Tabela 17.3. Espaçamento máximo: o menor entre 2h e 20 cm. Bitola máxima: h/8. Cortante sem estribos: V<sub>Sd</sub> ≤ V<sub>Rd1</sub> (19.4.1). A laje de fundo recebe no engaste o maior momento das paredes.</p></section>
+        <p class="note">d medido até a camada externa: d = h − c − ø/2. As,mín por face com ρ<sub>mín</sub> da Tabela 17.3. Espaçamento máximo: o menor entre 2h e 20 cm. Bitola máxima: h/8. Cortante sem estribos: V<sub>Sd</sub> ≤ V<sub>Rd1</sub> (19.4.1). A laje de fundo recebe no engaste o maior momento das paredes. A armadura horizontal (N5) é dimensionada à flexo-tração com M<sub>x</sub> e N<sub>x</sub> da casca (aba Esforços, item 5), fora do nó do encontro; o A<sub>s,mín</sub> é o da parede mais espessa.</p></section>
     </div>
   </main>
   <main id="pane-mem" hidden>
@@ -789,6 +792,603 @@ if (typeof module !== 'undefined' && module.exports) module.exports = { AlasArm 
 </script>
 <script>
 /* =====================================================================
+   Alas · Motor de elementos finitos de casca
+   Extraído do app "Flutuação em Caixas" v3.10 (FEengine), sem nada
+   específico da caixa: serve para qualquer estrutura de placas e cascas
+   planas montada com elementos retangulares.
+
+   Elemento: retangular de 4 nós, 6 graus de liberdade por nó
+     (ux, uy, uz, θx, θy, θz globais)
+     - membrana Q4 com modos incompatíveis (condensação estática)
+     - placa de Mindlin MITC4 (sem travamento por cisalhamento)
+     - rigidez fictícia de giro no plano (1e-3 · D)
+   Solver: numeração Cuthill-McKee reversa + skyline LDLᵀ.
+   Molas: lineares ou só de compressão (iteração liga/desliga).
+   Esforços: valores nos pontos de Gauss e recuperação nodal SPR
+     (Zienkiewicz-Zhu), por superfície.
+   Unidades: as que você usar, de forma coerente (o app usa kN e m).
+
+   Funções puras, sem DOM. MotorMEF é autocontida: MotorMEF.toString()
+   pode ser levada para um Web Worker, como o app de flutuação faz.
+   ===================================================================== */
+function MotorMEF() {
+  const G2 = [-1 / Math.sqrt(3), 1 / Math.sqrt(3)];
+  const NODE = [[-1, -1], [1, -1], [1, 1], [-1, 1]];
+
+  /* ----- eixos locais -----
+     Cada elemento usa a matriz T da sua superfície (mesh.surf[e.s].T) ou
+     a sua própria (e.T). As linhas de T são os eixos locais x', y', z'
+     escritos em coordenadas globais; z' é a normal da casca. */
+  const axesOf = (mesh, e) => e.T || mesh.surf[e.s].T;
+
+  /* ----- matriz do elemento retangular (cache por dimensões) ----- */
+  const cache = new Map();
+  function elemMats(a, b, t, E, nu) {
+    const key = [a.toFixed(6), b.toFixed(6), t.toFixed(5), E, nu].join('|');
+    if (cache.has(key)) return cache.get(key);
+    const ha = a / 2, hb = b / 2, dJ = ha * hb;
+    const Am = E * t / (1 - nu * nu), Db = E * t * t * t / (12 * (1 - nu * nu)), Ds = 5 / 6 * E / (2 * (1 + nu)) * t;
+    const C = [[1, nu, 0], [nu, 1, 0], [0, 0, (1 - nu) / 2]];
+    const N = (i, x, y) => 0.25 * (1 + NODE[i][0] * x) * (1 + NODE[i][1] * y);
+    const Nx = (i, x, y) => 0.25 * NODE[i][0] * (1 + NODE[i][1] * y) / ha;
+    const Ny = (i, x, y) => 0.25 * NODE[i][1] * (1 + NODE[i][0] * x) / hb;
+    const zeros = (r, c) => Array.from({ length: r }, () => new Float64Array(c));
+    const K = zeros(24, 24);
+    // ---- membrana: nós (u,v) -> 8 gl; modos incompatíveis 4 gl
+    const Kcc = zeros(8, 8), Kci = zeros(8, 4), Kii = zeros(4, 4);
+    const BmAt = (x, y) => {
+      const Bc = zeros(3, 8), Bi = zeros(3, 4);
+      for (let i = 0; i < 4; i++) { const dx = Nx(i, x, y), dy = Ny(i, x, y); Bc[0][2 * i] = dx; Bc[1][2 * i + 1] = dy; Bc[2][2 * i] = dy; Bc[2][2 * i + 1] = dx; }
+      Bi[0][0] = -2 * x / ha; Bi[1][3] = -2 * y / hb; Bi[2][1] = -2 * y / hb; Bi[2][2] = -2 * x / ha;
+      return { Bc, Bi };
+    };
+    const addBtDB = (Kout, B1, B2, D, f) => {
+      const r1 = B1[0].length, r2 = B2[0].length;
+      for (let p = 0; p < r1; p++) for (let q = 0; q < r2; q++) {
+        let s = 0;
+        for (let i = 0; i < 3; i++) { if (!B1[i][p]) continue; for (let j = 0; j < 3; j++) s += B1[i][p] * D[i][j] * B2[j][q]; }
+        Kout[p][q] += s * f;
+      }
+    };
+    const Dm = C.map(r => r.map(v => v * Am)), Dbm = C.map(r => r.map(v => v * Db));
+    G2.forEach(x => G2.forEach(y => {
+      const { Bc, Bi } = BmAt(x, y);
+      addBtDB(Kcc, Bc, Bc, Dm, dJ); addBtDB(Kci, Bc, Bi, Dm, dJ); addBtDB(Kii, Bi, Bi, Dm, dJ);
+    }));
+    // condensação estática: K = Kcc − Kci Kii⁻¹ Kic ;  R = Kii⁻¹ Kic (para recuperar os modos internos)
+    const inv = invert(Kii.map(r => Array.from(r)));
+    const R = zeros(4, 8);
+    for (let i = 0; i < 4; i++) for (let j = 0; j < 8; j++) { let s = 0; for (let k = 0; k < 4; k++) s += inv[i][k] * Kci[j][k]; R[i][j] = s; }
+    const mDof = i => [6 * i, 6 * i + 1];
+    for (let p = 0; p < 8; p++) for (let q = 0; q < 8; q++) {
+      let s = Kcc[p][q]; for (let k = 0; k < 4; k++) s -= Kci[p][k] * R[k][q];
+      K[mDof(p >> 1)[p & 1]][mDof(q >> 1)[q & 1]] += s;
+    }
+    // ---- placa MITC4: gl locais (w, φx, φy); φx = θy', φy = −θx'
+    // B de flexão: κx = Σ Nx φx ; κy = Σ Ny φy ; κxy = Σ (Ny φx + Nx φy)   (colunas: w, φx, φy por nó)
+    const BbAt = (x, y) => { const B = zeros(3, 12); for (let i = 0; i < 4; i++) { const dx = Nx(i, x, y), dy = Ny(i, x, y); B[0][3 * i + 1] = dx; B[1][3 * i + 2] = dy; B[2][3 * i + 1] = dy; B[2][3 * i + 2] = dx; } return B; };
+    // cisalhamento direto: γxz = ∂w/∂x + φx ; γyz = ∂w/∂y + φy, interpolado nos pontos A, B, C, D (MITC4)
+    const gxzAt = (x, y) => { const r = new Float64Array(12); for (let i = 0; i < 4; i++) { r[3 * i] = Nx(i, x, y); r[3 * i + 1] = N(i, x, y); } return r; };
+    const gyzAt = (x, y) => { const r = new Float64Array(12); for (let i = 0; i < 4; i++) { r[3 * i] = Ny(i, x, y); r[3 * i + 2] = N(i, x, y); } return r; };
+    const gA = gxzAt(0, -1), gC = gxzAt(0, 1), gD = gyzAt(-1, 0), gB = gyzAt(1, 0);
+    const BsAt = (x, y) => { const B = zeros(2, 12); for (let k = 0; k < 12; k++) { B[0][k] = 0.5 * (1 - y) * gA[k] + 0.5 * (1 + y) * gC[k]; B[1][k] = 0.5 * (1 - x) * gD[k] + 0.5 * (1 + x) * gB[k]; } return B; };
+    const Kp = zeros(12, 12);
+    G2.forEach(x => G2.forEach(y => {
+      const Bb = BbAt(x, y), Bs = BsAt(x, y);
+      addBtDB(Kp, Bb, Bb, Dbm, dJ);
+      for (let p = 0; p < 12; p++) for (let q = 0; q < 12; q++) Kp[p][q] += Ds * (Bs[0][p] * Bs[0][q] + Bs[1][p] * Bs[1][q]) * dJ;
+    }));
+    // (w, φx, φy) -> (w, θx', θy'):  φx = θy', φy = −θx'
+    const map = (k) => { const n = Math.floor(k / 3), c = k % 3; return c === 0 ? [6 * n + 2, 1] : c === 1 ? [6 * n + 4, 1] : [6 * n + 3, -1]; };
+    for (let p = 0; p < 12; p++) for (let q = 0; q < 12; q++) { const [ip, sp] = map(p), [iq, sq] = map(q); K[ip][iq] += sp * sq * Kp[p][q]; }
+    // giro no plano (fictício)
+    const kd = 1e-3 * Db;
+    for (let i = 0; i < 4; i++) K[6 * i + 5][6 * i + 5] += kd;
+    // ---- resultantes nos 4 pontos de Gauss, como funções lineares dos 24 gl locais
+    // ordem: [M1, M2, M12, Q1, Q2, N1, N2, N12]  (1 = x', 2 = y')
+    const S = [];
+    const gp = [[G2[0], G2[0]], [G2[1], G2[0]], [G2[1], G2[1]], [G2[0], G2[1]]];
+    gp.forEach(([x, y]) => {
+      const rows = Array.from({ length: 8 }, () => new Float64Array(24));
+      const Bb = BbAt(x, y), Bs = BsAt(x, y);
+      for (let k = 0; k < 12; k++) {
+        const [ik, sk] = map(k);
+        for (let r = 0; r < 3; r++) { let s = 0; for (let j = 0; j < 3; j++) s += Dbm[r][j] * Bb[j][k]; rows[r][ik] += sk * s; }
+        rows[3][ik] += sk * Ds * Bs[0][k]; rows[4][ik] += sk * Ds * Bs[1][k];
+      }
+      const { Bc, Bi } = BmAt(x, y);
+      // ε = Bc uc + Bi a ,  a = −R uc
+      const Beff = zeros(3, 8);
+      for (let r = 0; r < 3; r++) for (let q = 0; q < 8; q++) { let s = Bc[r][q]; for (let k = 0; k < 4; k++) s -= Bi[r][k] * R[k][q]; Beff[r][q] = s; }
+      for (let r = 0; r < 3; r++) for (let q = 0; q < 8; q++) { let s = 0; for (let j = 0; j < 3; j++) s += Dm[r][j] * Beff[j][q]; rows[5 + r][mDof(q >> 1)[q & 1]] += s; }
+      S.push(rows);
+    });
+    // extrapolação Gauss -> nós
+    const s3 = Math.sqrt(3), X = NODE.map(([xi, yi]) => gp.map(([xg, yg]) => 0.25 * (1 + xi * s3 * Math.sign(xg)) * (1 + yi * s3 * Math.sign(yg))));
+    const out = { K, S, X, ha, hb, dJ, N, Db };
+    cache.set(key, out);
+    return out;
+  }
+
+  function invert(A) {
+    const n = A.length, M = A.map((r, i) => r.concat(Array.from({ length: n }, (_, j) => (i === j ? 1 : 0))));
+    for (let c = 0; c < n; c++) {
+      let p = c; for (let r = c + 1; r < n; r++) if (Math.abs(M[r][c]) > Math.abs(M[p][c])) p = r;
+      [M[c], M[p]] = [M[p], M[c]];
+      const d = M[c][c]; for (let j = 0; j < 2 * n; j++) M[c][j] /= d;
+      for (let r = 0; r < n; r++) if (r !== c) { const f = M[r][c]; if (f) for (let j = 0; j < 2 * n; j++) M[r][j] -= f * M[c][j]; }
+    }
+    return M.map(r => r.slice(n));
+  }
+
+  /* ----- malha ----- */
+  // Divide o intervalo dos pontos-chave em trechos de passo ≤ h, passando por todos eles.
+  // zones: [[a, b, hf]] = faixas com passo menor (refino junto às ligações)
+  function axis(keys, h, zones = []) {
+    keys = keys.slice();
+    const lo = Math.min(...keys), hi = Math.max(...keys);
+    zones.forEach(([a, b]) => { if (a > lo && a < hi) keys.push(a); if (b > lo && b < hi) keys.push(b); });
+    const k = [...new Set(keys.map(v => +v.toFixed(6)))].sort((a, b) => a - b);
+    const out = [k[0]];
+    for (let i = 1; i < k.length; i++) {
+      const L = k[i] - k[i - 1]; if (L < 1e-6) continue;
+      const mid = (k[i] + k[i - 1]) / 2, z = zones.find(([a, b]) => mid > a && mid < b), hs = z ? Math.min(h, z[2]) : h;
+      const n = Math.max(1, Math.round(L / hs)); for (let j = 1; j <= n; j++) out.push(k[i - 1] + L * j / n);
+    }
+    return out;
+  }
+
+  // Montador de malha: nós únicos por coordenada (as superfícies se ligam nos nós comuns)
+  // surf: { nome: { T } } com os eixos locais de cada superfície
+  function createMesh(surf) {
+    const nodes = [], keyMap = new Map(), elems = [];
+    const node = (x, y, z) => { const k = x.toFixed(5) + ',' + y.toFixed(5) + ',' + z.toFixed(5); let id = keyMap.get(k); if (id == null) { id = nodes.length; nodes.push([x, y, z]); keyMap.set(k, id); } return id; };
+    // Superfície em grade: us, vs = divisões nas direções locais x', y'; P(u, v) -> [x, y, z] global.
+    // Nós em ordem anti-horária em torno de z'. keep(uc, vc) descarta elementos (aberturas).
+    // extra(nome, uc, vc) -> propriedades a mais do elemento (ex.: { Ef: 1e-4 } para zerar a rigidez).
+    const addSurface = (name, us, vs, P, t, keep, extra) => {
+      for (let i = 0; i < us.length - 1; i++) for (let j = 0; j < vs.length - 1; j++) {
+        const uc = (us[i] + us[i + 1]) / 2, vc = (vs[j] + vs[j + 1]) / 2;
+        if (keep && !keep(uc, vc)) continue;
+        const n = [node(...P(us[i], vs[j])), node(...P(us[i + 1], vs[j])), node(...P(us[i + 1], vs[j + 1])), node(...P(us[i], vs[j + 1]))];
+        const e = { s: name, n, a: us[i + 1] - us[i], b: vs[j + 1] - vs[j], t, c: P(uc, vc), Ef: 1 };
+        if (extra) Object.assign(e, extra(name, uc, vc));
+        elems.push(e);
+      }
+    };
+    return { nodes, elems, surf, node, addSurface };
+  }
+
+  /* ----- numeração (Cuthill-McKee reverso) e solver skyline LDLᵀ ----- */
+  function rcm(nn, elems) {
+    const adj = Array.from({ length: nn }, () => new Set());
+    elems.forEach(e => e.n.forEach(a => e.n.forEach(b => { if (a !== b) adj[a].add(b); })));
+    const deg = adj.map(s => s.size), seen = new Uint8Array(nn), order = [];
+    const bfs = start => { const lv = new Int32Array(nn).fill(-1); lv[start] = 0; const q = [start]; for (let i = 0; i < q.length; i++) adj[q[i]].forEach(v => { if (lv[v] < 0) { lv[v] = lv[q[i]] + 1; q.push(v); } }); return { q, lv }; };
+    for (let s0 = 0; s0 < nn; s0++) {
+      if (seen[s0]) continue;
+      let start = s0;
+      for (let it = 0; it < 3; it++) { const { q, lv } = bfs(start); const far = q[q.length - 1]; let best = far; q.forEach(v => { if (lv[v] === lv[far] && deg[v] < deg[best]) best = v; }); start = best; }
+      const q = [start]; seen[start] = 1;
+      for (let i = 0; i < q.length; i++) {
+        const nb = [...adj[q[i]]].filter(v => !seen[v]).sort((a, b) => deg[a] - deg[b]);
+        nb.forEach(v => { seen[v] = 1; q.push(v); });
+      }
+      order.push(...q);
+    }
+    return order.reverse();
+  }
+
+  // Fatora a matriz skyline em LDLᵀ no próprio vetor. false se não for positiva definida.
+  function factor(a, maxa, n) {
+    for (let N = 0; N < n; N++) {
+      const kn = maxa[N], kl = kn + 1, ku = maxa[N + 1] - 1, kh = ku - kl;
+      if (kh > 0) {
+        let k = N - kh, ic = 0, klt = ku;
+        for (let j = 1; j <= kh; j++) {
+          ic++; klt--;
+          const ki = maxa[k], nd = maxa[k + 1] - ki - 1;
+          if (nd > 0) { const kk = Math.min(ic, nd); let c = 0; for (let l = 1; l <= kk; l++) c += a[ki + l] * a[klt + l]; a[klt] -= c; }
+          k++;
+        }
+      }
+      if (kh >= 0) {
+        let k = N, b = 0;
+        for (let kk = kl; kk <= ku; kk++) { k--; const ki = maxa[k], c = a[kk] / a[ki]; b += c * a[kk]; a[kk] = c; }
+        a[kn] -= b;
+      }
+      if (!(a[kn] > 0)) return false;
+    }
+    return true;
+  }
+  // Resolve com a matriz já fatorada (sobrescreve v)
+  function backsub(a, maxa, n, v) {
+    for (let N = 0; N < n; N++) { const kl = maxa[N] + 1, ku = maxa[N + 1] - 1; if (ku >= kl) { let k = N, c = 0; for (let kk = kl; kk <= ku; kk++) { k--; c += a[kk] * v[k]; } v[N] -= c; } }
+    for (let N = 0; N < n; N++) v[N] /= a[maxa[N]];
+    for (let N = n - 1; N > 0; N--) { const kl = maxa[N] + 1, ku = maxa[N + 1] - 1; if (ku >= kl) { let k = N; for (let kk = kl; kk <= ku; kk++) { k--; v[k] -= a[kk] * v[N]; } } }
+    return v;
+  }
+
+  /* ----- montagem ----- */
+  // fixedDof(nó, gl) -> true para gl restrito (0..5 = ux, uy, uz, θx, θy, θz).
+  // Devolve eq (gl -> equação, −1 se restrito), n equações e a matriz skyline a0.
+  // E de cada elemento = mat.E × e.Ef (Ef = 1 por padrão).
+  function prepare(mesh, mat, fixedDof) {
+    const nn = mesh.nodes.length, order = rcm(nn, mesh.elems);
+    const eq = new Int32Array(6 * nn).fill(-1);
+    let n = 0;
+    order.forEach(nd => { for (let d = 0; d < 6; d++) if (!fixedDof(nd, d)) eq[6 * nd + d] = n++; });
+    const top = new Int32Array(n); for (let i = 0; i < n; i++) top[i] = i;
+    mesh.elems.forEach(e => {
+      const eqs = []; e.n.forEach(nd => { for (let d = 0; d < 6; d++) { const q = eq[6 * nd + d]; if (q >= 0) eqs.push(q); } });
+      const mn = Math.min(...eqs); eqs.forEach(q => { if (mn < top[q]) top[q] = mn; });
+    });
+    const maxa = new Int32Array(n + 1); for (let j = 0; j < n; j++) maxa[j + 1] = maxa[j] + (j - top[j] + 1);
+    const a0 = new Float64Array(maxa[n]);
+    mesh.elems.forEach(e => {
+      const M = elemMats(e.a, e.b, e.t, mat.E * (e.Ef || 1), mat.nu);
+      const Kg = globalK(M.K, axesOf(mesh, e));
+      const idx = []; e.n.forEach(nd => { for (let d = 0; d < 6; d++) idx.push(eq[6 * nd + d]); });
+      for (let p = 0; p < 24; p++) { const i = idx[p]; if (i < 0) continue; for (let q = 0; q < 24; q++) { const j = idx[q]; if (j < 0 || i > j) continue; a0[maxa[j] + (j - i)] += Kg[p][q]; } }
+    });
+    return { eq, n, maxa, a0, nnz: maxa[n], nn };
+  }
+  function globalK(K, T) {
+    // R (24×24) bloco-diagonal com T 3×3; Kg = Rᵀ K R
+    const Kg = Array.from({ length: 24 }, () => new Float64Array(24));
+    const tmp = Array.from({ length: 24 }, () => new Float64Array(24));
+    for (let p = 0; p < 24; p++) for (let q = 0; q < 24; q++) {        // tmp = K R
+      const bq = q - q % 3; let s = 0; for (let k = 0; k < 3; k++) s += K[p][bq + k] * T[k][q % 3]; tmp[p][q] = s;
+    }
+    for (let p = 0; p < 24; p++) for (let q = 0; q < 24; q++) {        // Kg = Rᵀ tmp
+      const bp = p - p % 3; let s = 0; for (let k = 0; k < 3; k++) s += T[k][p % 3] * tmp[bp + k][q]; Kg[p][q] = s;
+    }
+    return Kg;
+  }
+
+  /* ----- cargas ----- */
+  // Força por área: fn(x, y, z, elemento) -> [fx, fy, fz] global (ou null). Integração 2×2.
+  function areaLoad(mesh, eq, n, fn) {
+    const F = new Float64Array(n);
+    mesh.elems.forEach(e => {
+      const M = elemMats(e.a, e.b, e.t, 1, 0.2);
+      const P = e.n.map(i => mesh.nodes[i]);
+      G2.forEach(x => G2.forEach(y => {
+        const Nv = [0, 1, 2, 3].map(i => M.N(i, x, y));
+        const X = [0, 1, 2].map(c => Nv.reduce((s, v, i) => s + v * P[i][c], 0));
+        const f = fn(X[0], X[1], X[2], e); if (!f) return;
+        for (let i = 0; i < 4; i++) for (let c = 0; c < 3; c++) { const q = eq[6 * e.n[i] + c]; if (q >= 0) F[q] += Nv[i] * f[c] * M.dJ; }
+      }));
+    });
+    return F;
+  }
+  // Força por comprimento "vec" [fx, fy, fz] ao longo dos nós em que pred(ponto) é verdadeiro,
+  // ordenados pela coordenada "along" (0 = x, 1 = y, 2 = z); cada nó recebe metade dos trechos vizinhos.
+  function lineLoad(mesh, eq, F, pred, along, vec) {
+    const nn = mesh.nodes.length, ids = []; for (let i = 0; i < nn; i++) if (pred(mesh.nodes[i])) ids.push(i);
+    ids.sort((a, b) => mesh.nodes[a][along] - mesh.nodes[b][along]);
+    ids.forEach((id, k) => {
+      const c = mesh.nodes[id][along], lo = k > 0 ? (c - mesh.nodes[ids[k - 1]][along]) / 2 : 0, hi = k < ids.length - 1 ? (mesh.nodes[ids[k + 1]][along] - c) / 2 : 0;
+      for (let d = 0; d < 3; d++) { const q = eq[6 * id + d]; if (q >= 0 && vec[d]) F[q] += vec[d] * (lo + hi); }
+    });
+    return F;
+  }
+  // Força ou momento concentrado no gl "dof" (0..5) do nó
+  function nodalLoad(eq, F, node, dof, value) { const q = eq[6 * node + dof]; if (q >= 0) F[q] += value; return F; }
+  // Soma das cargas no gl "dof" (ex.: 2 = resultante vertical)
+  function sumLoad(eq, nn, F, dof) { let s = 0; for (let i = 0; i < nn; i++) { const q = eq[6 * i + dof]; if (q >= 0) s += F[q]; } return s; }
+
+  // Área de influência de cada nó (¼ da área de cada elemento) nos elementos em que filter(e) é verdadeiro
+  function tributary(mesh, filter) {
+    const trib = new Float64Array(mesh.nodes.length);
+    mesh.elems.forEach(e => { if (!filter || filter(e)) e.n.forEach(i => { trib[i] += e.a * e.b / 4; }); });
+    return trib;
+  }
+
+  /* ----- solução com molas -----
+     springs: [{ node, dof, k, compOnly, comp }]
+       k        rigidez da mola (força por deslocamento)
+       compOnly só compressão: a mola é desligada se tracionar, e o cálculo se repete
+       comp     sentido do deslocamento que comprime a mola (−1 padrão: mola de apoio sob a base, uz ≤ 0)
+     F:      vetores de carga básicos
+     combos: [{ f: [coeficientes de cada F], lin: true para manter todas as molas ligadas }]
+     Devolve, por combinação: U, active (por mola), force (por mola, positiva comprimindo),
+     lifted (molas desligadas), floated (nenhuma mola ativa ou sistema instável), it. */
+  function solveSprings(sys, springs, F, combos, opt = {}) {
+    const { eq, n, maxa, a0 } = sys, maxIt = opt.maxIt || 25, ns = springs.length;
+    const eqOf = springs.map(s => eq[6 * s.node + s.dof]);
+    const cmp = springs.map(s => s.comp == null ? -1 : s.comp);
+    const solveWith = (active, rhsList) => {
+      const a = new Float64Array(a0);
+      for (let j = 0; j < ns; j++) if (active[j]) { const q = eqOf[j]; if (q >= 0) a[maxa[q]] += springs[j].k; }
+      if (!factor(a, maxa, n)) return null;
+      return rhsList.map(r => backsub(a, maxa, n, Float64Array.from(r)));
+    };
+    const uOf = (U, j) => { const q = eqOf[j]; return q >= 0 ? U[q] : 0; };
+    const allOn = new Uint8Array(ns).fill(1);
+    let nFact = 1;
+    const base = solveWith(allOn, F);
+    if (!base) return { error: 'A matriz de rigidez não é positiva definida. Confira a geometria, os apoios e as molas.' };
+    const solveCombo = cb => {
+      let U = new Float64Array(n); cb.f.forEach((c, k) => { if (c) for (let i = 0; i < n; i++) U[i] += c * base[k][i]; });
+      let active = allOn, it = 0, lifted = 0;
+      const anyNonlin = springs.some(s => s.compOnly);
+      if (!cb.lin && anyNonlin) {
+        for (; it < maxIt; it++) {
+          const next = new Uint8Array(ns); let changed = false, any = false;
+          for (let j = 0; j < ns; j++) { next[j] = !springs[j].compOnly || cmp[j] * uOf(U, j) >= 0 ? 1 : 0; if (next[j]) any = true; if (next[j] !== active[j]) changed = true; }
+          if (!changed) break;
+          if (!any) return { U, active: next, floated: true, it };
+          const Fc = new Float64Array(n); cb.f.forEach((c, k) => { if (c) for (let i = 0; i < n; i++) Fc[i] += c * F[k][i]; });
+          const r = solveWith(next, [Fc]); nFact++;
+          if (!r) return { U, active: next, floated: true, it };
+          U = r[0]; active = next;
+        }
+        for (let j = 0; j < ns; j++) if (!active[j]) lifted++;
+      }
+      return { U, active, it, lifted, floated: false };
+    };
+    const results = combos.map(cb => {
+      const r = solveCombo(cb), force = new Float64Array(ns);
+      for (let j = 0; j < ns; j++) if (r.active[j]) force[j] = Math.max(0, cmp[j] * springs[j].k * uOf(r.U, j));
+      r.force = force;
+      return r;
+    });
+    return { results, nFact };
+  }
+
+  /* ----- deslocamentos ----- */
+  // Translações nodais [ux, uy, uz] por nó (Float64Array de 3·nn)
+  function displacements(eq, nn, U) { const d = new Float64Array(nn * 3); for (let i = 0; i < nn; i++) for (let c = 0; c < 3; c++) { const q = eq[6 * i + c]; d[3 * i + c] = q >= 0 ? U[q] : 0; } return d; }
+
+  /* ----- resultantes: pontos de Gauss e recuperação nodal (SPR, Zienkiewicz-Zhu) ----- */
+  // Por elemento, nos 4 pontos de Gauss: [M1, M2, M12, Q1, Q2, N1, N2, N12] nos eixos locais
+  function gaussValues(mesh, eq, U, mat) {
+    return mesh.elems.map(e => {
+      const M = elemMats(e.a, e.b, e.t, mat.E * (e.Ef || 1), mat.nu), T = axesOf(mesh, e), ul = new Float64Array(24);
+      e.n.forEach((nd, k) => { for (let blk = 0; blk < 2; blk++) { const gv = [0, 1, 2].map(c => { const q = eq[6 * nd + 3 * blk + c]; return q >= 0 ? U[q] : 0; }); for (let r = 0; r < 3; r++) ul[6 * k + 3 * blk + r] = T[r][0] * gv[0] + T[r][1] * gv[1] + T[r][2] * gv[2]; } });
+      return M.S.map(rows => rows.map(row => { let s = 0; for (let k = 0; k < 24; k++) s += row[k] * ul[k]; return s; }));
+    });
+  }
+  // Para cada superfície: lista de nós e, para cada nó, pesos sobre os valores de Gauss (elemento, ponto).
+  // A recuperação é feita por superfície (não mistura parede com laje). Calcule uma vez por malha.
+  function recovery(mesh) {
+    const surfNodes = {}, surfIdx = {}, W = {};
+    const Tof = e => axesOf(mesh, e);
+    const gpPos = mesh.elems.map(e => {
+      const M = elemMats(e.a, e.b, e.t, 1, 0.2), T = Tof(e), P = e.n.map(i => mesh.nodes[i]);
+      return [[-1, -1], [1, -1], [1, 1], [-1, 1]].map(([sx, sy]) => {
+        const x = sx / Math.sqrt(3), y = sy / Math.sqrt(3), Nv = [0, 1, 2, 3].map(i => M.N(i, x, y));
+        const X = [0, 1, 2].map(c => Nv.reduce((s, v, i) => s + v * P[i][c], 0));
+        return [T[0][0] * X[0] + T[0][1] * X[1] + T[0][2] * X[2], T[1][0] * X[0] + T[1][1] * X[1] + T[1][2] * X[2]];
+      });
+    });
+    // superfícies na ordem em que aparecem na malha
+    const names = []; mesh.elems.forEach(e => { if (!names.includes(e.s)) names.push(e.s); });
+    names.forEach(s => {
+      const nodeEl = new Map();
+      let Ts = null;
+      mesh.elems.forEach((e, ei) => { if (e.s !== s) return; if (!Ts) Ts = Tof(e); e.n.forEach((i, k) => { if (!nodeEl.has(i)) nodeEl.set(i, []); nodeEl.get(i).push([ei, k]); }); });
+      const uv = i => { const T = Ts, X = mesh.nodes[i]; return [T[0][0] * X[0] + T[0][1] * X[1] + T[0][2] * X[2], T[1][0] * X[0] + T[1][1] * X[1] + T[1][2] * X[2]]; };
+      const list = [...nodeEl.keys()]; surfNodes[s] = list; surfIdx[s] = new Map(list.map((i, j) => [i, j]));
+      // polinômio do patch de cada nó interior (4 elementos): p = [1, u, v, uv] centrado no nó
+      const patch = new Map();
+      nodeEl.forEach((els, i) => {
+        if (els.length !== 4) return;
+        const [u0, v0] = uv(i), pts = [];
+        els.forEach(([ei]) => gpPos[ei].forEach((q, g) => pts.push([ei, g, q[0] - u0, q[1] - v0])));
+        const A = [[0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0], [0, 0, 0, 0]];
+        pts.forEach(([, , du, dv]) => { const p = [1, du, dv, du * dv]; for (let r = 0; r < 4; r++) for (let c = 0; c < 4; c++) A[r][c] += p[r] * p[c]; });
+        patch.set(i, { u0, v0, Ai: invert(A), pts });
+      });
+      const evalPatch = (pt, u, v) => { const p = [1, u - pt.u0, v - pt.v0, (u - pt.u0) * (v - pt.v0)], c = [0, 1, 2, 3].map(r => pt.Ai[r].reduce((s2, x, k) => s2 + x * p[k], 0)); return pt.pts.map(([ei, g, du, dv]) => [ei, g, c[0] + c[1] * du + c[2] * dv + c[3] * du * dv]); };
+      W[s] = list.map(i => {
+        const [u, v] = uv(i);
+        if (patch.has(i)) return evalPatch(patch.get(i), u, v);
+        // nó de borda: média das extrapolações dos patches vizinhos
+        const nb = new Set(); nodeEl.get(i).forEach(([ei]) => mesh.elems[ei].n.forEach(j => { if (patch.has(j)) nb.add(j); }));
+        if (nb.size) { const acc = []; nb.forEach(j => evalPatch(patch.get(j), u, v).forEach(([ei, g, w]) => acc.push([ei, g, w / nb.size]))); return acc; }
+        // sem patch interior: extrapolação dentro dos próprios elementos
+        const els = nodeEl.get(i), acc = [];
+        els.forEach(([ei, k]) => { const M = elemMats(mesh.elems[ei].a, mesh.elems[ei].b, mesh.elems[ei].t, 1, 0.2); for (let g = 0; g < 4; g++) acc.push([ei, g, M.X[k][g] / els.length]); });
+        return acc;
+      });
+    });
+    return { surfNodes, surfIdx, W };
+  }
+  // Resultantes nodais por superfície: out[s][8·j + r], j = índice do nó em surfNodes[s]
+  function nodal(rec, gpv) {
+    const out = {};
+    Object.keys(rec.W).forEach(s => {
+      const W = rec.W[s], a = new Float64Array(W.length * 8);
+      W.forEach((ws, j) => ws.forEach(([ei, g, w]) => { const v = gpv[ei][g]; for (let r = 0; r < 8; r++) a[8 * j + r] += w * v[r]; }));
+      out[s] = a;
+    });
+    return out;
+  }
+
+  return {
+    // elemento e solver
+    elemMats, invert, globalK, rcm, factor, backsub, prepare,
+    // malha
+    axis, createMesh, tributary,
+    // cargas
+    areaLoad, lineLoad, nodalLoad, sumLoad,
+    // solução e resultados
+    solveSprings, displacements, gaussValues, recovery, nodal,
+    COMP: ['M1', 'M2', 'M12', 'Q1', 'Q2', 'N1', 'N2', 'N12']
+  };
+}
+
+if (typeof module !== 'undefined' && module.exports) module.exports = { MotorMEF };
+
+</script>
+<script>
+/* =====================================================================
+   Alas · Paredes por elementos finitos de casca (motor-mef.js)
+   Testa e as duas alas pelo plano médio, em metade da estrutura
+   (simetria no eixo do tubo, x = 0). Base engastada na laje de fundo
+   (z = 0, topo da laje). Furo do tubo retirado da testa. Topo da ala em
+   degraus, caindo de H_t junto à testa até H_p na ponta.
+   Carga: empuxo ativo p = K_a · γ · (topo − z) na face do solo: a
+   montante na testa, a externa nas alas (o aterro acompanha o topo).
+   Eixos locais: x' horizontal ao longo da parede, y' vertical, z' para o
+   solo. M > 0 traciona a face do solo (+z'). M1 = momento que tensiona
+   na direção horizontal (armadura horizontal); N1 > 0 tração horizontal.
+   Unidades do motor: kN e m. Entrada e saída da geometria em cm.
+   ===================================================================== */
+const AlasMEF = (function () {
+  const FE = MotorMEF(), G = AlasGeo;
+  const E = 2.5e7, NU = 0.2;          // kN/m² (linear: os esforços não dependem de E)
+
+  // Wood-Armer na direção 1, nas duas faces: [face do solo, face oposta] (≥ 0)
+  function wa1(M1, M2, M12) {
+    const a = Math.abs(M12);
+    let e1 = M1 + a, e2 = M2 + a, i1 = M1 - a, i2 = M2 - a;
+    if (e1 < 0 && e2 < 0) e1 = 0; else if (e1 < 0) e1 = 0; else if (e2 < 0) e1 = M1 + (Math.abs(M2) > 1e-12 ? M12 * M12 / Math.abs(M2) : 0);
+    if (i1 > 0 && i2 > 0) i1 = 0; else if (i1 > 0) i1 = 0; else if (i2 > 0) i1 = M1 - (Math.abs(M2) > 1e-12 ? M12 * M12 / Math.abs(M2) : 0);
+    return [Math.max(0, e1), Math.max(0, -i1)];
+  }
+
+  function model(p, hm) {
+    const m = v => v / 100, d = G.derive(p);
+    const et = m(p.et), ea = m(p.ea), Ht = m(p.Ht), Hp = m(p.Hp), La = m(p.La), r = m(p.D) / 2;
+    const hb1 = m(p.b1) / 2, hb2 = m(p.b2) / 2, yE = et + La;
+    // ala: direção da face interna, normal para fora (lado do solo) e plano médio
+    const L0 = Math.hypot(hb2 - hb1, La), dir = [(hb2 - hb1) / L0, La / L0], nrm = [dir[1], -dir[0]];
+    const ax = hb1 + nrm[0] * ea / 2, ay = et + nrm[1] * ea / 2;     // ponto do plano médio da ala na cota da face de jusante da testa
+    const tC = (et / 2 - ay) / dir[1], xc = ax + tC * dir[0], yc = et / 2;   // encontro dos planos médios
+    const Lw = (yE - yc) / dir[1];                                     // comprimento do plano médio da ala até a ponta
+    const topW = u => { const y = yc + u * dir[1], t = Math.min(1, Math.max(0, (y - et) / La)); return Ht + (Hp - Ht) * t; };
+    const SURF = {
+      testa: { T: [[1, 0, 0], [0, 0, 1], [0, -1, 0]] },
+      ala: { T: [[dir[0], dir[1], 0], [0, 0, 1], [dir[1], -dir[0], 0]] }
+    };
+    const mesh = FE.createMesh(SURF);
+    const zs = FE.axis([0, r * 2 < Ht ? 2 * r : Ht, Ht, Hp], hm);
+    const xs = FE.axis([0, Math.min(r, xc), Math.max(0, xc - ea / 2), xc], hm);
+    const us = FE.axis([0, Math.min(et / 2, Lw), Lw], hm);
+    mesh.addSurface('testa', xs, zs, (u, v) => [u, yc, v], et, (u, v) => !(u * u + (v - r) * (v - r) < r * r));
+    mesh.addSurface('ala', us, zs, (u, v) => [xc + u * dir[0], yc + u * dir[1], v], ea, (u, v) => v < topW(u));
+    return { mesh, xc, yc, Lw, dir, topW, et, ea, Ht, Hp, r };
+  }
+
+  /* análise: p (cm), soil {gs, phi}; hm = tamanho dos elementos (m) */
+  function analyze(p, soil, hm = 0.05) {
+    const t0 = Date.now(), Md = model(p, hm), { mesh } = Md;
+    const Ka = Math.tan((45 - soil.phi / 2) * Math.PI / 180) ** 2;
+    const fixed = (n, dof) => { const q = mesh.nodes[n]; return q[2] < 1e-9 || (Math.abs(q[0]) < 1e-9 && (dof === 0 || dof === 4 || dof === 5)); };
+    const sys = FE.prepare(mesh, { E, nu: NU }, fixed);
+    // pressão na face do solo empurra a parede para -z'
+    const F = FE.areaLoad(mesh, sys.eq, sys.n, (x, y, z, e) => {
+      const T = mesh.surf[e.s].T, top = e.s === 'testa' ? Md.Ht : Md.topW(((x - Md.xc) * Md.dir[0] + (y - Md.yc) * Md.dir[1])), pr = Ka * soil.gs * Math.max(0, top - z);
+      return [-T[2][0] * pr, -T[2][1] * pr, -T[2][2] * pr];
+    });
+    const sol = FE.solveSprings(sys, [], [F], [{ f: [1] }]);
+    if (sol.error) return { error: sol.error };
+    const U = sol.results[0].U, rec = FE.recovery(mesh), res = FE.nodal(rec, FE.gaussValues(mesh, sys.eq, U, { E, nu: NU }));
+    // reação vertical de conferência: soma das cargas horizontais = soma das reações (equilíbrio)
+    const Fy = FE.sumLoad(sys.eq, mesh.nodes.length, F, 1), Fx = FE.sumLoad(sys.eq, mesh.nodes.length, F, 0);
+    const pts = { testa: [], ala: [] };
+    ['testa', 'ala'].forEach(s => rec.surfNodes[s].forEach((i, j) => {
+      const q = mesh.nodes[i], o = 8 * j, M1 = res[s][o], M2 = res[s][o + 1], M12 = res[s][o + 2], N1 = res[s][o + 5];
+      const u = s === 'testa' ? q[0] : (q[0] - Md.xc) * Md.dir[0] + (q[1] - Md.yc) * Md.dir[1];
+      pts[s].push({ u, z: q[2], M1, M2, M12, N1, wa: wa1(M1, M2, M12) });
+    }));
+    const disp = FE.displacements(sys.eq, mesh.nodes.length, U);
+    return { Ka, Md, mesh, pts, disp, gauss: FE.gaussValues(mesh, sys.eq, U, { E, nu: NU }), stats: { nElem: mesh.elems.length, nEq: sys.n, ms: Date.now() - t0 }, Fx, Fy };
+  }
+
+  /* ----- dimensionamento da armadura horizontal (N5) -----
+     Flexo-tração por face, b = 100 cm, h = espessura da parede, d = h − c − ø/2 (N5 por fora).
+     Região de dimensionamento: fora do nó do encontro (testa até a face da ala, ala a partir
+     da face da testa). Majoração γf = 1,4. */
+  function design(p, FEres, a, AR) {
+    const fcd = a.fck / 10 / 1.4, fyd = 50 / 1.15;
+    const flex = (Mkn, d) => { const M = Mkn * 100; if (!(M > 0)) return 0; const rr = 1 - M / (0.425 * 100 * d * d * fcd); if (rr < 0) return NaN; const x = 1.25 * d * (1 - Math.sqrt(rr)); return M / (fyd * (d - 0.4 * x)); };
+    const flexN = (Mk, Nk, h, d) => {
+      const Md = 1.4 * Mk, Nd = 1.4 * Nk, dl = h - d;
+      if (!(Nd > 0)) return flex(Md, d);
+      const e0 = Md * 100 / Nd, lim = h / 2 - dl;
+      if (e0 <= lim) return Nd * (h / 2 + e0 - dl) / ((d - dl) * fyd);
+      return flex(Md - Nd * lim / 100, d) + Nd / fyd;
+    };
+    const Md = FEres.Md, phi = a.ph_phi, c = a.cob;
+    const zone = { testa: q => q.u <= Md.xc - Md.ea / 2 + 1e-9, ala: q => q.u >= Md.et / 2 - 1e-9 };
+    const hOf = { testa: p.et, ala: p.ea };
+    const out = { testa: null, ala: null }, all = [];
+    ['testa', 'ala'].forEach(s => {
+      const h = hOf[s], d = h - c - phi / 20;
+      let best = [{ As: 0 }, { As: 0 }];
+      FEres.pts[s].forEach(q => {
+        if (!zone[s](q)) return;
+        [0, 1].forEach(f => {
+          const Mk = q.wa[f], Nk = q.N1, As = flexN(Mk, Nk, h, d);
+          const rec = { s, f, u: q.u, z: q.z, Mk, Nk, As, h, d };
+          all.push(rec);
+          if (!(best[f].As >= As)) best[f] = rec;
+        });
+      });
+      out[s] = { h, d, face: best, Asmin: AR.rhoMin(a.fck) / 100 * 100 * h };
+    });
+    const Asef = AR.asBar(phi) * 100 / a.ph_s;
+    // por camada da N5: maior As,nec em cada face na faixa z ± s/2
+    const layers = AR.hLayers(p, a).map(L => {
+      const z0 = (L.z - a.ph_s / 2) / 100, z1 = (L.z + a.ph_s / 2) / 100;
+      const band = all.filter(q => q.z >= z0 - 1e-9 && q.z <= z1 + 1e-9);
+      const mx = f => band.filter(q => q.f === f).reduce((b, q) => (q.As > b.As ? q : b), { As: 0 });
+      return { z: L.z, soil: mx(0), inner: mx(1) };
+    });
+    const req = Math.max(out.testa.face[0].As, out.testa.face[1].As, out.ala.face[0].As, out.ala.face[1].As);
+    const AsminMax = Math.max(out.testa.Asmin, out.ala.Asmin);
+    const ok = isFinite(req) && Asef >= req - 1e-9 && Asef >= AsminMax - 1e-9;
+    return { out, layers, Asef, req, AsminMax, ok, okFlex: isFinite(req) && Asef >= req - 1e-9, okMin: Asef >= AsminMax - 1e-9 };
+  }
+
+  /* ----- mapa de M1 na elevação desenvolvida (testa | ala) ----- */
+  function mapSvg(p, FEres, W = 760, H = 320) {
+    const Md = FEres.Md, mesh = FEres.mesh, fx = AlasEsf.fx;
+    const Lx = Md.xc + Md.Lw, padL = 40, padR = 20, padT = 30, padB = 64;
+    const k = Math.min((W - padL - padR) / Lx, (H - padT - padB) / Md.Ht);
+    const ox = padL + (W - padL - padR - Lx * k) / 2, oy = padT + Md.Ht * k;
+    const X = u => ox + u * k, Z = z => oy - z * k;
+    const uOf = (s, q) => s === 'testa' ? q[0] : Md.xc + (q[0] - Md.xc) * Md.dir[0] + (q[1] - Md.yc) * Md.dir[1];
+    const key = (s, q) => s + ':' + (s === 'testa' ? q[0] : (q[0] - Md.xc) * Md.dir[0] + (q[1] - Md.yc) * Md.dir[1]).toFixed(5) + ',' + q[2].toFixed(5);
+    const val = new Map(); let vmin = 0, vmax = 0;
+    ['testa', 'ala'].forEach(s => FEres.pts[s].forEach(q => { val.set(s + ':' + q.u.toFixed(5) + ',' + q.z.toFixed(5), q.M1); vmin = Math.min(vmin, q.M1); vmax = Math.max(vmax, q.M1); }));
+    const vabs = Math.max(1e-9, vmax, -vmin);
+    const mix = (c, t) => `rgb(${[0, 1, 2].map(i => Math.round(246 + (c[i] - 246) * t)).join(',')})`;
+    const color = v => { const t = Math.max(-1, Math.min(1, v / vabs)); return t >= 0 ? mix([194, 83, 27], t) : mix([37, 99, 176], -t); };
+    let s = G.STYLE + `<style>.mt{font-size:11.5px;fill:var(--cota,#334155);paint-order:stroke;stroke:var(--fundo,#fff);stroke-width:4px}</style>`;
+    mesh.elems.forEach(e => {
+      const pts = e.n.map(i => mesh.nodes[i]);
+      const v = pts.reduce((a2, q) => a2 + (val.get(key(e.s, q)) || 0), 0) / 4;
+      s += `<polygon points="${pts.map(q => `${X(uOf(e.s, q)).toFixed(1)},${Z(q[2]).toFixed(1)}`).join(' ')}" fill="${color(v)}" stroke="${color(v)}" stroke-width=".4"/>`;
+    });
+    s += `<line class="ln" x1="${X(Md.xc)}" y1="${Z(0)}" x2="${X(Md.xc)}" y2="${Z(Md.Ht)}" stroke-dasharray="5 3"/>`;
+    s += `<line class="ln" x1="${X(0) - 4}" y1="${Z(0)}" x2="${X(Lx) + 4}" y2="${Z(0)}" stroke-width="1.6"/>`;
+    for (let x = X(0); x < X(Lx); x += 9) s += `<line class="th" x1="${x}" y1="${Z(0)}" x2="${x - 6}" y2="${Z(0) + 7}"/>`;
+    s += `<text class="mt" x="${X(Md.xc / 2)}" y="${Z(0) + 22}" text-anchor="middle">testa (metade)</text><text class="mt" x="${X(Md.xc + Md.Lw / 2)}" y="${Z(0) + 22}" text-anchor="middle">ala, desenvolvida</text>`;
+    s += `<text class="mt" x="${X(0)}" y="${Z(Md.Ht) - 8}">eixo do tubo</text><text class="mt" x="${X(Md.xc)}" y="${Z(Md.Ht) - 8}" text-anchor="middle">encontro</text><text class="mt" x="${X(Lx)}" y="${Z(0) + 22}" text-anchor="end">ponta</text>`;
+    const ly = H - 12;
+    s += `<rect x="${ox}" y="${ly - 9}" width="10" height="10" fill="${color(vabs)}"/><text class="mt" x="${ox + 14}" y="${ly}">traciona a face do solo, máx. ${fx(vmax, 3)} kN·m/m</text>`;
+    s += `<rect x="${ox + 300}" y="${ly - 9}" width="10" height="10" fill="${color(-vabs)}"/><text class="mt" x="${ox + 314}" y="${ly}">traciona a face oposta, máx. ${fx(-vmin, 3)} kN·m/m</text>`;
+    return G.svgWrap(W, H, s);
+  }
+
+  // tamanho da malha: cerca de 1800 elementos, entre 2,5 e 10 cm
+  function meshSize(p) {
+    const Md = model(p, 0.1), area = (Md.xc + Md.Lw) * Md.Ht;
+    return Math.min(0.1, Math.max(0.025, Math.sqrt(area / 1800)));
+  }
+
+  return { analyze, design, mapSvg, model, meshSize };
+})();
+if (typeof module !== 'undefined' && module.exports) module.exports = { AlasMEF };
+
+</script>
+<script>
+/* =====================================================================
    Alas · Memorial de cálculo
    Monta o memorial em HTML a partir do estado do app (geometria, solo,
    esforços, tensão no solo, dimensionamento e armaduras adotadas).
@@ -805,7 +1405,7 @@ const AlasMem = (function () {
   const eq = t => `<p class="eq">${t}</p>`;
 
   function build(ctx) {
-    const { p, soil, R, a, A, info } = ctx, d = R.d, wt = R.wt, B = AR.bars(p, a), caa = AR.CAA[a.caa];
+    const { p, soil, R, a, A, info, FE } = ctx, D = A.hzD, d = R.d, wt = R.wt, B = AR.bars(p, a), caa = AR.CAA[a.caa];
     const rw = k => A.rows.find(x => x.k === k);
     const today = new Date().toLocaleDateString('pt-BR');
     let h = '';
@@ -820,7 +1420,7 @@ const AlasMem = (function () {
         <li>Empuxo ativo na testa em toda a altura, do fundo da laje sob a testa até o topo; empuxo passivo no dente, na altura da laje mais o dente.</li>
         <li>Testa e alas engastadas na laje de fundo, calculadas em faixas verticais de 1 m com a altura de solo de cada faixa; o aterro acompanha o topo inclinado das alas.</li>
         <li>Tensão no solo pelo peso próprio da estrutura dividido pela área de apoio, com concreto armado a ${E.GC} kN/m³.</li>
-        <li>Dimensionamento pela ABNT NBR 6118, em faixas de 1 m, com γ<sub>f</sub> = 1,4, γ<sub>c</sub> = 1,4 e γ<sub>s</sub> = 1,15. Na testa e nas alas, a armadura dimensionada é a vertical; a armadura horizontal das paredes é adotada, sem verificação de esforço nesta versão.</li>
+        <li>Dimensionamento pela ABNT NBR 6118, em faixas de 1 m, com γ<sub>f</sub> = 1,4, γ<sub>c</sub> = 1,4 e γ<sub>s</sub> = 1,15. Na testa e nas alas, a armadura vertical é dimensionada com o modelo de faixas engastadas na laje; a armadura horizontal, com os momentos horizontais de um modelo de casca por elementos finitos (item 4.6).</li>
       </ul>`;
 
     // 2
@@ -855,6 +1455,20 @@ const AlasMem = (function () {
       `<p>Área de apoio (contorno externo da laje em planta): A = ${x2(wt.A)} m².</p>
       ${eq(`σ = P / A = ${x2(wt.W)} / ${x2(wt.A)} = <b>${x2(wt.sigma)} kPa</b> (${fx(wt.sigma / 98.0665, 2)} kgf/cm²) ${R.soilOk ? '≤' : '>'} σ<sub>adm</sub> = ${f(soil.sadm)} kPa → ${st(R.soilOk)}`)}`;
 
+    // 4.6 casca
+    h += `<h3>4.6 Momentos horizontais nas paredes</h3>`;
+    if (!FE || FE.error) h += `<p>${FE && FE.error ? 'Não foi possível calcular o modelo de casca: ' + esc(FE.error) : 'Cálculo do modelo de casca em andamento.'}</p>`;
+    else {
+      h += `<p>Testa e alas modeladas como cascas pelo plano médio (elementos de 4 nós, placa de Mindlin MITC4 com membrana), ligadas no encontro, em metade da estrutura pela simetria no eixo do tubo. Base engastada na laje de fundo, furo do tubo aberto na testa e topo da ala em degraus. Carga característica: empuxo ativo K<sub>a</sub> · γ · (topo − z) na face do solo. Malha de ${fx(FE.hm * 100, 1)} cm, ${FE.stats.nElem} elementos. Momentos horizontais M<sub>x</sub> com Wood-Armer.</p>`;
+      h += `<div class="mfig" data-w="760" data-h="320">${AlasMEF.mapSvg(p, FE, 760, 320)}</div><p class="mcap">Figura 3 · Momento horizontal M<sub>x</sub> na testa e na ala desenvolvida (valores característicos)</p>`;
+      const rows = [];
+      [['testa', 'Testa'], ['ala', 'Ala']].forEach(([s2, nm]) => [0, 1].forEach(fc => {
+        const q = FE.pts[s2].reduce((b, x) => (x.wa[fc] > (b ? b.wa[fc] : -1) ? x : b), null);
+        rows.push([nm, fc ? 'oposta ao solo' : 'do solo', fx(q.wa[fc], 3), x2(q.N1), fx(q.u * 100, 1), fx(q.z * 100, 1)]);
+      }));
+      h += tbl(['Parede', 'Face tracionada', 'M<sub>x</sub> máx. (kN·m/m)', 'N<sub>x</sub> no ponto (kN/m)', 'Posição horizontal (cm)', 'z (cm)'], rows);
+    }
+
     // 5
     const fcd = a.fck / 1.4, fyd = 500 / 1.15;
     h += `<h2>5. Dimensionamento das armaduras</h2><h3>5.1 Materiais e ambiente</h3>` + tbl(['Item', 'Valor'], [
@@ -868,22 +1482,28 @@ const AlasMem = (function () {
     h += `<h3>5.3 Cortante</h3><p>Verificação sem armadura transversal: V<sub>Sd</sub> = 1,4 · V<sub>k</sub> ≤ V<sub>Rd1</sub> (item 19.4.1). Na laje de fundo, o cortante não foi calculado nesta versão.</p>` +
       tbl(['Elemento', 'd (cm)', 'ρ<sub>1</sub> (%)', 'V<sub>k</sub> (kN/m)', 'V<sub>Sd</sub> (kN/m)', 'V<sub>Rd1</sub> (kN/m)', 'Situação'],
         A.rows.filter(r => r.Vd != null).map(r => [r.nome, x2(r.d), fx(Math.min(2, r.Asef / r.d), 3), x2(r.Vk), x2(r.Vd), x2(r.VR), st(r.it.cort)]), 'sm');
-    const HL = AR.hLayers(p, a), nFull = HL.filter(x => x.t >= 1).length, nFuro = HL.filter(x => x.furo).length;
-    h += `<h3>5.4 Armadura horizontal das paredes</h3><p>Armadura adotada, sem verificação de esforço nesta versão. Corre na horizontal pelas duas alas e pela testa, nas duas faces, a ${f(a.cob)} cm das faces; nas pontas das alas, as barras externa e interna fecham com dobra de ${R0(p.ea - 2 * a.cob)} cm. As camadas de cima param onde o topo inclinado da ala chega, e nas camadas que cruzam o tubo a barra da testa é interrompida no furo.</p>` +
-      tbl(['Item', 'Valor'], [
-        ['Armadura (N5)', `ø${f(a.ph_phi)} c/${f(a.ph_s)}`], ['A<sub>s,ef</sub> por face', x2(A.hz.Asef) + ' cm²/m'],
-        ['Camadas acima da laje', `${HL.length} (z = ${HL.map(x => f(x.z)).join(', ')} cm)`],
-        ['Camadas até a ponta das alas', String(nFull)], ['Camadas interrompidas no furo do tubo', String(nFuro)]
+    h += `<h3>5.4 Armadura horizontal das paredes</h3><p>Armadura N5, a ${f(a.cob)} cm das faces, correndo pelas duas alas e pela testa nas duas faces; nas pontas das alas, as barras externa e interna fecham com dobra de ${R0(p.ea - 2 * a.cob)} cm. Dimensionamento à flexo-tração com M<sub>d</sub> = 1,4 · M<sub>x</sub> e N<sub>d</sub> = 1,4 · N<sub>x</sub> do item 4.6, em cada face, fora do nó do encontro; d = h − c − ø/2. A armadura mínima é a da parede mais espessa.</p>`;
+    const HL = AR.hLayers(p, a);
+    if (!D) h += `<p>Verificação em andamento (cálculo do modelo de casca).</p>`;
+    else {
+      const g = D.gov;
+      h += tbl(['Item', 'Valor'], [
+        ['Armadura adotada (N5)', `ø${f(a.ph_phi)} c/${f(a.ph_s)}, ${HL.length} camadas (z = ${HL.map(x => f(x.z)).join(', ')} cm)`],
+        ['Ponto que governa', g.s ? `${g.s === 'testa' ? 'testa' : 'ala'}, face ${g.f ? 'oposta ao solo' : 'do solo'}, z = ${fx(g.z * 100, 1)} cm: M<sub>x</sub> = ${fx(g.Mk, 3)} kN·m/m, N<sub>x</sub> = ${x2(g.Nk)} kN/m` : '—'],
+        ['A<sub>s,nec</sub> (flexo-tração)', fx(D.req, 3) + ' cm²/m'], ['A<sub>s,mín</sub> por face', x2(D.AsminMax) + ' cm²/m'], ['A<sub>s,ef</sub> por face', x2(D.Asef) + ' cm²/m'],
+        ['Espaçamento ≤ s<sub>máx</sub>', `${f(a.ph_s)} ≤ ${f(D.sMax)} cm`], ['Bitola ≤ h/8', `${f(a.ph_phi)} ≤ ${fx(D.phiMax, 1)} mm`],
+        ['Situação', st(D.ok)]
       ]);
+    }
 
     // 7
     const checks = [
       ['Equilíbrio dos empuxos, E<sub>p</sub> / E<sub>a</sub> ≥ 1', `${x2(R.FS)}`, R.ok],
       ['Tensão no solo, σ ≤ σ<sub>adm</sub>', `${x2(wt.sigma)} ≤ ${f(soil.sadm)} kPa`, R.soilOk]
     ].concat(A.rows.map(r => [`${r.nome}${r.k === 'lf' ? '' : ' (vertical)'}: flexão, armadura mínima, cortante e detalhamento`, `ø${f(r.phi)} c/${f(r.s)}`, r.ok]));
-    h += `<h2>6. Resumo das verificações</h2>` + tbl(['Verificação', 'Valor', 'Situação'], checks.map(([n, v, ok]) => [n, v, st(ok)]).concat([['Paredes, armadura horizontal (N5)', `ø${f(a.ph_phi)} c/${f(a.ph_s)}`, '<span style="color:#5b6676">adotada, sem verificação</span>']]));
+    h += `<h2>6. Resumo das verificações</h2>` + tbl(['Verificação', 'Valor', 'Situação'], checks.map(([n, v, ok]) => [n, v, st(ok)]).concat([['Paredes, armadura horizontal (N5): flexo-tração, armadura mínima e detalhamento', `ø${f(a.ph_phi)} c/${f(a.ph_s)}`, D ? st(D.ok) : 'em cálculo']]));
     if (A.warn.length) h += `<p class="mw">${A.warn.join('<br>')}</p>`;
-    h += `<p class="mf">Cálculo preliminar: valide coeficientes e hipóteses antes de uso em projeto executivo. Gerado pelo Alas v1.7 em ${today}.</p>`;
+    h += `<p class="mf">Cálculo preliminar: valide coeficientes e hipóteses antes de uso em projeto executivo. Gerado pelo Alas v1.8 em ${today}.</p>`;
     return h;
   }
 
@@ -1120,6 +1740,36 @@ if (typeof module !== 'undefined' && module.exports) module.exports = { AlasMem 
     return e;
   }
   let lastR = null;
+  /* ----- casca das paredes (elementos finitos), recalculada 300 ms após a última mudança ----- */
+  let lastFE = null, feKey = null, feTimer = null, feFirst = true;
+  function ensureFE() {
+    const key = JSON.stringify([state, sstate.gs, sstate.phi]);
+    if (key === feKey) return;
+    feKey = key; lastFE = null; clearTimeout(feTimer);
+    el('mef-status').textContent = 'calculando…';
+    feTimer = setTimeout(() => {
+      try { const hm = AlasMEF.meshSize(state); lastFE = AlasMEF.analyze(state, sstate, hm); lastFE.hm = hm; }
+      catch (e) { lastFE = { error: String((e && e.message) || e) }; }
+      renderFE(); renderArm();
+    }, feFirst ? 0 : 300);
+    feFirst = false;
+    renderFE();
+  }
+  function renderFE() {
+    const x3 = v => E.fx(v, 3);
+    if (!lastFE) { el('fig-mef').innerHTML = '<p class="note" style="padding:16px">Calculando os momentos nas paredes…</p>'; el('mef-tab').innerHTML = ''; return; }
+    if (lastFE.error) { el('mef-status').textContent = 'erro no cálculo'; el('fig-mef').innerHTML = `<div class="alert">Não foi possível calcular as paredes: ${lastFE.error}</div>`; el('mef-tab').innerHTML = ''; return; }
+    const st = lastFE.stats;
+    el('mef-status').textContent = `${st.nElem} elementos de ${E.fx(lastFE.hm * 100, 1)} cm · ${st.nEq} equações · ${st.ms} ms`;
+    el('fig-mef').innerHTML = AlasMEF.mapSvg(state, lastFE, 760, 320);
+    const rows = [];
+    [['testa', 'Testa'], ['ala', 'Ala']].forEach(([s, nm]) => [0, 1].forEach(fc => {
+      const q = lastFE.pts[s].reduce((b, x) => (x.wa[fc] > (b ? b.wa[fc] : -1) ? x : b), null);
+      rows.push(`<tr><td class="l">${nm}</td><td class="l">${fc ? 'face oposta ao solo' : 'face do solo'}</td><td>${x3(q.wa[fc])}</td><td>${E.fx(q.N1, 2)}</td><td>${E.fx(q.u * 100, 1)}</td><td>${E.fx(q.z * 100, 1)}</td></tr>`);
+    }));
+    el('mef-tab').innerHTML = `<table class="res"><thead><tr><th class="l">Parede</th><th class="l">Face tracionada</th><th>M<sub>x</sub> máx. (kN·m/m)</th><th>N<sub>x</sub> no ponto (kN/m)</th><th>Posição horizontal (cm)</th><th>Altura z (cm)</th></tr></thead><tbody>${rows.join('')}</tbody></table>
+      <p class="note" style="padding:6px 6px 0">Posição horizontal: na testa, a partir do eixo do tubo; na ala, a partir do encontro com a testa, ao longo da ala. N<sub>x</sub> &gt; 0 é tração.</p>`;
+  }
   function renderEsf() {
     const s = Object.assign({}, sstate, sraw), errs = validateSoil(s);
     Object.keys(E.SDEF).forEach(k => { el('f-' + k).classList.toggle('bad', !!errs[k]); el('m-' + k).textContent = errs[k] || ''; });
@@ -1139,6 +1789,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = { AlasMem 
       <tr><td class="l">Tensão média no solo</td><td class="l">σ = peso ÷ área</td><td>${x2(wt.sigma)} kPa</td><td><span class="pill ${R.soilOk ? 'ok' : 'no'}">${R.soilOk ? '≤ σadm, atende' : '> σadm, não atende'}</span></td></tr></tbody></table>`;
     el('fig-emp').innerHTML = E.cutLoads(q, R, 760, 430);
     lastR = R;
+    ensureFE();
     el('fig-ala').innerHTML = E.wingChart(q, R, 760, 470);
     const c = x2;
     const rowsE = [
@@ -1218,14 +1869,22 @@ if (typeof module !== 'undefined' && module.exports) module.exports = { AlasMem 
     el('alerts-arm').innerHTML = n ? `<div class="alert">${n === 1 ? 'Um campo precisa' : n + ' campos precisam'} de ajuste. O dimensionamento usa os últimos valores válidos.</div>` : '';
     if (!n) { astate = a; araw = {}; try { localStorage.setItem(AKEY, JSON.stringify(astate)); } catch (e) {} }
     const A = AR.check(state, lastR, astate), x2 = v => E.fx(v, 2), ok = b => `<span class="pill ${b ? 'ok' : 'no'}">${b ? 'ok' : 'não'}</span>`;
-    const bad = A.rows.filter(r => !r.ok).map(r => r.nome.toLowerCase());
-    el('verif-arm').innerHTML = `<div class="verif ${A.ok && !A.warn.length ? 'ok' : 'no'}"><span>${A.ok ? 'As três armaduras atendem às verificações.' : 'Não atende: ' + bad.join(', ') + '. Veja a tabela.'}</span>${A.warn.map(w => `<span>${w}</span>`).join('')}</div>`;
+    A.hzD = null;
+    if (lastFE && !lastFE.error) {
+      const D = AlasMEF.design(state, lastFE, astate, AR), hmin = Math.min(state.et, state.ea);
+      D.sMax = Math.min(2 * hmin, 20); D.phiMax = hmin * 10 / 8; D.okEsp = astate.ph_s <= D.sMax + 1e-9; D.okBit = astate.ph_phi <= D.phiMax + 1e-9;
+      D.gov = ['testa', 'ala'].flatMap(s => D.out[s].face).reduce((b, q) => (q.As > b.As ? q : b), { As: 0 });
+      D.ok = D.ok && D.okEsp && D.okBit; A.hzD = D; if (!D.ok) A.ok = false;
+    }
+    const bad = A.rows.filter(r => !r.ok).map(r => r.nome.toLowerCase()).concat(A.hzD && !A.hzD.ok ? ['armadura horizontal (N5)'] : []);
+    const pend = !A.hzD ? '<span>A armadura horizontal está sendo verificada (cálculo das paredes em andamento).</span>' : '';
+    el('verif-arm').innerHTML = `<div class="verif ${A.ok && !A.warn.length ? 'ok' : 'no'}"><span>${A.ok ? (A.hzD ? 'As quatro armaduras atendem às verificações.' : 'As três armaduras verticais e da laje atendem às verificações.') : 'Não atende: ' + bad.join(', ') + '. Veja a tabela.'}</span>${pend}${A.warn.map(w => `<span>${w}</span>`).join('')}</div>`;
     el('fig-arm').innerHTML = AR.cutBars(state, A, astate);
     const BB = AR.bars(state, astate), rw = key => A.rows.find(x => x.k === key), R0 = v => f(Math.round(v));
     const HL = AR.hLayers(state, astate);
     el('fig-hz').innerHTML = AR.planHz(state, astate, 560, 400);
-    el('hz-tab').innerHTML = `<table class="res"><thead><tr><th class="l">Camada</th><th>z acima da laje (cm)</th><th class="l">Extensão</th><th>Externa: reto (cm)</th><th>Interna: reto (cm)</th><th>Dobras nas pontas (cm)</th><th class="l">Na testa</th></tr></thead><tbody>${HL.map((R, i) => `<tr><td class="l">${i + 1}</td><td>${f(R.z)}</td><td class="l">${R.t >= 1 ? 'até a ponta das alas' : 'até ' + Math.round(R.t * 100) + ' % da ala'}</td><td>${R0(R.LO)}</td><td>${R0(R.LI)}</td><td>${R0(R.dob)} + ${R0(R.dob)}</td><td class="l">${R.furo ? 'interrompida no furo do tubo' : 'contínua'}</td></tr>`).join('')}</tbody></table>`;
-    el('hz-sum').innerHTML = `<b style="color:var(--hz)">N5</b> ø${f(astate.ph_phi)} c/${f(astate.ph_s)} · ${HL.length} camada${HL.length === 1 ? '' : 's'} · A<sub>s,ef</sub> = ${x2(A.hz.Asef)} cm²/m por face`;
+    el('hz-tab').innerHTML = `<table class="res"><thead><tr><th class="l">Camada</th><th>z acima da laje (cm)</th><th class="l">Extensão</th><th>Externa: reto (cm)</th><th>Interna: reto (cm)</th><th>Dobras nas pontas (cm)</th><th class="l">Na testa</th><th>A<sub>s,nec</sub> face do solo (cm²/m)</th><th>A<sub>s,nec</sub> face oposta (cm²/m)</th></tr></thead><tbody>${HL.map((R, i) => { const Ly = A.hzD && A.hzD.layers[i]; return `<tr><td class="l">${i + 1}</td><td>${f(R.z)}</td><td class="l">${R.t >= 1 ? 'até a ponta das alas' : 'até ' + Math.round(R.t * 100) + ' % da ala'}</td><td>${R0(R.LO)}</td><td>${R0(R.LI)}</td><td>${R0(R.dob)} + ${R0(R.dob)}</td><td class="l">${R.furo ? 'interrompida no furo do tubo' : 'contínua'}</td><td>${Ly ? E.fx(Ly.soil.As, 3) : '…'}</td><td>${Ly ? E.fx(Ly.inner.As, 3) : '…'}</td></tr>`; }).join('')}</tbody></table>`;
+    el('hz-sum').innerHTML = `<b style="color:var(--hz)">N5</b> ø${f(astate.ph_phi)} c/${f(astate.ph_s)} · ${HL.length} camada${HL.length === 1 ? '' : 's'} · A<sub>s,ef</sub> = ${x2(A.hz.Asef)} cm²/m por face${A.hzD ? ` · A<sub>s,nec</sub> = ${E.fx(A.hzD.req, 3)}, A<sub>s,mín</sub> = ${x2(A.hzD.AsminMax)} cm²/m` : ''}`;
     lastA = A;
     renderMem();
     el('arm-pos').innerHTML = `<table class="res"><thead><tr><th class="l">Posição</th><th class="l">Elemento</th><th class="l">Armadura</th><th class="l">Forma</th><th>Dobra + reto + dobra (cm)</th><th>Cada barra (cm)</th><th>Barras por estribo</th></tr></thead><tbody>${BB.map(b => `<tr><td class="l"><b style="color:var(${b.n === 'N4' ? '--aco2' : '--aco'})">${b.n}</b></td><td class="l">${b.el}</td><td class="l">ø${f(rw(b.k).phi)} c/${f(rw(b.k).s)}</td><td class="l" style="white-space:normal;min-width:240px">${b.form}</td><td>${R0(b.dob)} + ${R0(b.reto)}${b.reto1 != null ? ' a ' + R0(b.reto1) : ''} + ${R0(b.dob)}</td><td>${R0(b.L)}${b.Lmin != null ? ' a ' + R0(b.Lmin) : ''}</td><td>2</td></tr>`).join('')}</tbody></table>`;
@@ -1235,7 +1894,10 @@ if (typeof module !== 'undefined' && module.exports) module.exports = { AlasMem 
       <td>${f(r.h)}</td><td>${x2(r.d)}</td><td>${x2(r.Mk)}</td><td>${x2(r.Md)}</td><td>${isFinite(r.xd) ? E.fx(r.xd, 3) : '—'}</td>
       <td>${isFinite(r.As) ? x2(r.As) : '—'}</td><td>${x2(r.Asmin)}</td><td><b>${x2(r.Asef)}</b></td>
       <td>${ok(r.it.flex)}</td><td>${ok(r.it.min)}</td><td>${ok(r.it.esp)} <span style="color:var(--muted)">${f(r.sMax)}</span></td><td>${ok(r.it.bit)} <span style="color:var(--muted)">${f(r.phiMax)}</span></td>
-      <td>${r.Vd == null ? '—' : x2(r.Vd)}</td><td>${r.Vd == null ? '—' : x2(r.VR)}</td><td>${r.Vd == null ? '—' : ok(r.it.cort)}</td></tr>`).join('')}</tbody></table>`;
+      <td>${r.Vd == null ? '—' : x2(r.Vd)}</td><td>${r.Vd == null ? '—' : x2(r.VR)}</td><td>${r.Vd == null ? '—' : ok(r.it.cort)}</td></tr>`).join('')}${(() => { const D = A.hzD; if (!D) return `<tr><td class="l">Paredes, horizontal (N5)<br><span style="color:var(--muted);font-size:11px">casca: calculando…</span></td><td class="l"><b>ø${f(astate.ph_phi)} c/${f(astate.ph_s)}</b></td>${'<td>…</td>'.repeat(15)}</tr>`; const g = D.gov;
+      return `<tr><td class="l">Paredes, horizontal (N5)<br><span style="color:var(--muted);font-size:11px">casca: ${g.s === 'testa' ? 'testa' : 'ala'}, ${g.f ? 'face oposta' : 'face do solo'}, z = ${E.fx((g.z || 0) * 100, 1)} cm</span></td><td class="l"><b>ø${f(astate.ph_phi)} c/${f(astate.ph_s)}</b></td>
+      <td>${f(g.h || Math.min(state.et, state.ea))}</td><td>${g.d ? x2(g.d) : '—'}</td><td>${E.fx(g.Mk || 0, 3)}</td><td>${E.fx(1.4 * (g.Mk || 0), 3)}</td><td>—</td><td>${E.fx(D.req, 3)}</td><td>${x2(D.AsminMax)}</td><td><b>${x2(D.Asef)}</b></td>
+      <td>${ok(D.okFlex)}</td><td>${ok(D.okMin)}</td><td>${ok(D.okEsp)} <span style="color:var(--muted)">${f(D.sMax)}</span></td><td>${ok(D.okBit)} <span style="color:var(--muted)">${f(D.phiMax)}</span></td><td>—</td><td>—</td><td>—</td></tr>`; })()}</tbody></table>`;
   }
   ['fck', 'caa'].concat(AK.map(k => k + '_phi')).forEach(k => el('in-' + k).addEventListener('change', ev => {
     const v = ev.target.value; araw[k] = k === 'caa' ? v : parseFloat(v);
@@ -1256,7 +1918,7 @@ if (typeof module !== 'undefined' && module.exports) module.exports = { AlasMem 
   ['obra', 'local', 'resp'].forEach(k => { const inp = el('in-' + k); inp.value = info[k]; inp.addEventListener('input', () => { info[k] = inp.value; try { localStorage.setItem(MKEY, JSON.stringify(info)); } catch (e) {} renderMem(); }); });
   function renderMem() {
     if (!lastR || !lastA) return;
-    el('mem-doc').innerHTML = AlasMem.build({ p: state, soil: sstate, R: lastR, a: astate, A: lastA, info });
+    el('mem-doc').innerHTML = AlasMem.build({ p: state, soil: sstate, R: lastR, a: astate, A: lastA, info, FE: lastFE });
   }
   const say = t => { el('mem-msg').textContent = t; clearTimeout(say.t); say.t = setTimeout(() => { el('mem-msg').textContent = ''; }, 6000); };
   el('mem-copy').addEventListener('click', async () => {
