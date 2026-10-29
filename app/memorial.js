@@ -30,7 +30,7 @@ const AlasMem = (function () {
         <li>Empuxo ativo na testa em toda a altura, do fundo da laje sob a testa até o topo; empuxo passivo no dente, na altura da laje mais o dente.</li>
         <li>Testa e alas engastadas na laje de fundo, calculadas em faixas verticais de 1 m com a altura de solo de cada faixa; o aterro acompanha o topo inclinado das alas.</li>
         <li>Tensão no solo pelo peso próprio da estrutura dividido pela área de apoio, com concreto armado a ${E.GC} kN/m³.</li>
-        <li>Dimensionamento pela ABNT NBR 6118, em faixas de 1 m, com γ<sub>f</sub> = 1,4, γ<sub>c</sub> = 1,4 e γ<sub>s</sub> = 1,15.</li>
+        <li>Dimensionamento pela ABNT NBR 6118, em faixas de 1 m, com γ<sub>f</sub> = 1,4, γ<sub>c</sub> = 1,4 e γ<sub>s</sub> = 1,15. Na testa e nas alas, a armadura dimensionada é a vertical; a armadura horizontal das paredes é adotada, sem verificação de esforço nesta versão.</li>
       </ul>`;
 
     // 2
@@ -74,19 +74,26 @@ const AlasMem = (function () {
     ]);
     h += `<h3>5.2 Flexão e armadura mínima</h3><p>Faixa de b = 100 cm, altura h igual à espessura do elemento, d = h − c − ø/2. M<sub>d</sub> = 1,4 · M<sub>k</sub>. Armadura mínima por face A<sub>s,mín</sub> = ρ<sub>mín</sub> · b · h, com ρ<sub>mín</sub> = ${fx(A.rhoMin, 3)} % (Tabela 17.3). A laje de fundo recebe no engaste o maior momento das paredes.</p>` +
       tbl(['Elemento', 'Armadura', 'h (cm)', 'd (cm)', 'M<sub>k</sub> (kN·m/m)', 'M<sub>d</sub> (kN·m/m)', 'x/d', 'A<sub>s,nec</sub> (cm²/m)', 'A<sub>s,mín</sub> (cm²/m)', 'A<sub>s,ef</sub> (cm²/m)', 'Situação'],
-        A.rows.map(r => [r.nome, `ø${f(r.phi)} c/${f(r.s)}`, f(r.h), x2(r.d), x2(r.Mk), x2(r.Md), isFinite(r.xd) ? fx(r.xd, 3) : '—', isFinite(r.As) ? x2(r.As) : '—', x2(r.Asmin), `<b>${x2(r.Asef)}</b>`, st(r.it.flex && r.it.min)]), 'sm');
+        A.rows.map(r => [r.nome, `ø${f(r.phi)} c/${f(r.s)}${r.k === 'lf' ? '' : ' (vertical)'}`, f(r.h), x2(r.d), x2(r.Mk), x2(r.Md), isFinite(r.xd) ? fx(r.xd, 3) : '—', isFinite(r.As) ? x2(r.As) : '—', x2(r.Asmin), `<b>${x2(r.Asef)}</b>`, st(r.it.flex && r.it.min)]), 'sm');
     h += `<h3>5.3 Cortante</h3><p>Verificação sem armadura transversal: V<sub>Sd</sub> = 1,4 · V<sub>k</sub> ≤ V<sub>Rd1</sub> (item 19.4.1). Na laje de fundo, o cortante não foi calculado nesta versão.</p>` +
       tbl(['Elemento', 'd (cm)', 'ρ<sub>1</sub> (%)', 'V<sub>k</sub> (kN/m)', 'V<sub>Sd</sub> (kN/m)', 'V<sub>Rd1</sub> (kN/m)', 'Situação'],
         A.rows.filter(r => r.Vd != null).map(r => [r.nome, x2(r.d), fx(Math.min(2, r.Asef / r.d), 3), x2(r.Vk), x2(r.Vd), x2(r.VR), st(r.it.cort)]), 'sm');
+    const HL = AR.hLayers(p, a), nFull = HL.filter(x => x.t >= 1).length, nFuro = HL.filter(x => x.furo).length;
+    h += `<h3>5.4 Armadura horizontal das paredes</h3><p>Armadura adotada, sem verificação de esforço nesta versão. Corre na horizontal pelas duas alas e pela testa, nas duas faces, a ${f(a.cob)} cm das faces; nas pontas das alas, as barras externa e interna fecham com dobra de ${R0(p.ea - 2 * a.cob)} cm. As camadas de cima param onde o topo inclinado da ala chega, e nas camadas que cruzam o tubo a barra da testa é interrompida no furo.</p>` +
+      tbl(['Item', 'Valor'], [
+        ['Armadura (N5)', `ø${f(a.ph_phi)} c/${f(a.ph_s)}`], ['A<sub>s,ef</sub> por face', x2(A.hz.Asef) + ' cm²/m'],
+        ['Camadas acima da laje', `${HL.length} (z = ${HL.map(x => f(x.z)).join(', ')} cm)`],
+        ['Camadas até a ponta das alas', String(nFull)], ['Camadas interrompidas no furo do tubo', String(nFuro)]
+      ]);
 
     // 7
     const checks = [
       ['Equilíbrio dos empuxos, E<sub>p</sub> / E<sub>a</sub> ≥ 1', `${x2(R.FS)}`, R.ok],
       ['Tensão no solo, σ ≤ σ<sub>adm</sub>', `${x2(wt.sigma)} ≤ ${f(soil.sadm)} kPa`, R.soilOk]
-    ].concat(A.rows.map(r => [`${r.nome}: flexão, armadura mínima, cortante e detalhamento`, `ø${f(r.phi)} c/${f(r.s)}`, r.ok]));
-    h += `<h2>6. Resumo das verificações</h2>` + tbl(['Verificação', 'Valor', 'Situação'], checks.map(([n, v, ok]) => [n, v, st(ok)]));
+    ].concat(A.rows.map(r => [`${r.nome}${r.k === 'lf' ? '' : ' (vertical)'}: flexão, armadura mínima, cortante e detalhamento`, `ø${f(r.phi)} c/${f(r.s)}`, r.ok]));
+    h += `<h2>6. Resumo das verificações</h2>` + tbl(['Verificação', 'Valor', 'Situação'], checks.map(([n, v, ok]) => [n, v, st(ok)]).concat([['Paredes, armadura horizontal (N5)', `ø${f(a.ph_phi)} c/${f(a.ph_s)}`, '<span style="color:#5b6676">adotada, sem verificação</span>']]));
     if (A.warn.length) h += `<p class="mw">${A.warn.join('<br>')}</p>`;
-    h += `<p class="mf">Cálculo preliminar: valide coeficientes e hipóteses antes de uso em projeto executivo. Gerado pelo Alas v1.6 em ${today}.</p>`;
+    h += `<p class="mf">Cálculo preliminar: valide coeficientes e hipóteses antes de uso em projeto executivo. Gerado pelo Alas v1.7 em ${today}.</p>`;
     return h;
   }
 

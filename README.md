@@ -8,7 +8,7 @@ Programa em um único arquivo HTML (`index.html`), sem dependências: abra no na
 
 - **Geometria**: tubo, testa, alas, laje de fundo, engrossamento sob a testa e dente na ponta; planta e corte A redesenhados a cada valor, na altura do painel de dados. Lastro de concreto magro fixo em 5 cm.
 - **Esforços**: solo (γ, φ, σ<sub>adm</sub>), empuxo ativo na testa (do fundo da laje sob a testa até o topo) e passivo no dente (laje mais dente), com a verificação E<sub>p</sub> / E<sub>a</sub> ≥ 1; testa e alas engastadas na laje de fundo em faixas de 1 m; tensão no solo pelo peso próprio dividido pela área de apoio.
-- **Armaduras**: f<sub>ck</sub>, classe de agressividade e cobrimento; armadura padrão (bitola e espaçamento) da laje de fundo (vale também para o dente), da testa e das paredes, igual nas duas faces e nas duas direções. Flexão, armadura mínima, espaçamento, bitola e cortante sem estribos. Posições N1 a N4 em barras de dobra + reto + dobra, espelhadas para fechar o estribo.
+- **Armaduras**: f<sub>ck</sub>, classe de agressividade e cobrimento; armadura padrão (bitola e espaçamento) da laje de fundo (vale também para o dente), da testa e das paredes, igual nas duas faces e nas duas direções. Flexão, armadura mínima, espaçamento, bitola e cortante sem estribos. Posições N1 a N4 em barras de dobra + reto + dobra, espelhadas para fechar o estribo; armadura horizontal das paredes (N5) correndo alas e testa.
 - **Memorial**: objeto e premissas, geometria (planta e corte), solo, esforços, dimensionamento (materiais, flexão e mínima, cortante) e resumo das verificações. Baixa em Word (.docx) ou copia para colar no Word.
 
 ## Estrutura
@@ -47,6 +47,7 @@ node testes/testes-motor.js            # testes do motor de elementos finitos
 - **v1.4**: barras no padrão aprovado (dobra + reto + dobra, duas barras espelhadas por estribo) e aba Memorial com download em Word.
 - **v1.5**: memorial com planta e corte no lugar das tabelas de geometria, 5.3 só com o cortante, sem a seção de armaduras adotadas.
 - **v1.6**: planta e corte dividem a altura do painel de dados, meio a meio.
+- **v1.7**: armadura horizontal das paredes (N5): bitola e espaçamento próprios, corre pelas duas alas e pela testa nas duas faces, com camadas, planta e tabela na aba Armaduras e item 5.4 no memorial. Testa e paredes passam a definir só a armadura vertical.
 
 ## Premissas
 

@@ -1,10 +1,11 @@
 /* =====================================================================
    Alas · Armaduras (NBR 6118)
-   Armadura padrão por elemento, a mesma nas duas faces e nas duas
-   direções (vertical e horizontal, ou longitudinal e transversal):
-     - laje de fundo (vale também para o dente)
-     - testa
-     - paredes (alas)
+   Armadura padrão por elemento, a mesma nas duas faces:
+     - laje de fundo (vale também para o dente), nas duas direções
+     - testa, vertical
+     - paredes (alas), vertical
+     - paredes, armadura horizontal: corre pelas duas alas e pela testa,
+       nas duas faces (N5); sem verificação de esforço nesta versão
    Verificações por faixa de 1 m: flexão simples (CA-50, γc = 1,4,
    γs = 1,15, γf = 1,4), armadura mínima por face, espaçamento máximo,
    bitola máxima e cortante sem estribos (V_Rd1).
@@ -23,10 +24,10 @@ const AlasArm = (function () {
   };
   const ELEM = [
     ['lf', 'Laje de fundo', 'vale também para o dente'],
-    ['te', 'Testa', ''],
-    ['pa', 'Paredes (alas)', '']
+    ['te', 'Testa', 'vertical'],
+    ['pa', 'Paredes (alas)', 'vertical']
   ];
-  const DEF = { fck: 25, caa: 'II', cob: 3.0, lf_phi: 8, lf_s: 20, te_phi: 8, te_s: 20, pa_phi: 8, pa_s: 20 };
+  const DEF = { fck: 25, caa: 'II', cob: 3.0, lf_phi: 8, lf_s: 20, te_phi: 8, te_s: 20, pa_phi: 8, pa_s: 20, ph_phi: 8, ph_s: 20 };
   // NBR 6118, Tabela 17.3 (seção retangular, CA-50)
   const rhoMin = fck => fck <= 30 ? 0.150 : fck <= 35 ? 0.164 : fck <= 40 ? 0.179 : fck <= 45 ? 0.194 : 0.208;
   const asBar = phi => Math.PI * (phi / 10) ** 2 / 4;           // cm²
@@ -76,7 +77,38 @@ const AlasArm = (function () {
       const ok = Object.values(it).every(Boolean);
       return { k, nome, obs, phi, s, h, d, Mk: e.Mk, Md, As: fl.As, xd: fl.xd, xdOk: fl.ok, Asmin, Asef, sMax, phiMax, Vk: e.Vk, Vd, VR, it, ok, orig: e.orig, asReq: Math.max(fl.As || 0, Asmin) };
     });
-    return { rows, warn, rhoMin: rhoMin(a.fck), ok: rows.every(r => r.ok) };
+    const hz = { phi: a.ph_phi, s: a.ph_s, Asef: asBar(a.ph_phi) * 100 / a.ph_s };
+    return { rows, hz, warn, rhoMin: rhoMin(a.fck), ok: rows.every(r => r.ok) };
+  }
+
+  /* ----- armadura horizontal N5 -----
+     Camadas a z = s/2, s/2 + s, ... acima do topo da laje, até H_t − c. Em cada camada,
+     duas barras (face externa e face interna) correm ala, testa e ala a c das faces e
+     fecham nas pontas com dobra de e_a − 2c. As camadas de cima param onde o topo
+     inclinado da ala chega. Nas camadas que cruzam o tubo (z < D + c), a barra da testa
+     é interrompida no furo e fecha com dobra. Planta: x transversal, y ao longo do eixo. */
+  function hLayers(p, a) {
+    const d = G.derive(p), c = a.cob, sH = a.ph_s, hb1 = p.b1 / 2, hb2 = p.b2 / 2, ex = d.ex, et = p.et, yE = p.et + p.La, Lt2 = d.Lt / 2;
+    const lineOff = (A, B, dd) => { const dx = B[0] - A[0], dy = B[1] - A[1], L = Math.hypot(dx, dy), nx = -dy / L, ny = dx / L; return [[A[0] + nx * dd, A[1] + ny * dd], [B[0] + nx * dd, B[1] + ny * dd]]; };
+    const inter = (l1, l2) => { const [p1, p2] = l1, [p3, p4] = l2, d1 = [p2[0] - p1[0], p2[1] - p1[1]], d2 = [p4[0] - p3[0], p4[1] - p3[1]], den = d1[0] * d2[1] - d1[1] * d2[0]; if (Math.abs(den) < 1e-12) return p2; const t = ((p3[0] - p1[0]) * d2[1] - (p3[1] - p1[1]) * d2[0]) / den; return [p1[0] + d1[0] * t, p1[1] + d1[1] * t]; };
+    const offsetPath = (pts, dd, yEnd) => {
+      const L = []; for (let i = 0; i < pts.length - 1; i++) L.push(lineOff(pts[i], pts[i + 1], dd));
+      const cut = [[-1e4, yEnd], [1e4, yEnd]], out = [inter(L[0], cut)];
+      for (let i = 0; i < L.length - 1; i++) out.push(inter(L[i], L[i + 1]));
+      out.push(inter(L[L.length - 1], cut)); return out;
+    };
+    const len = P => P.slice(1).reduce((t, q, i) => t + Math.hypot(q[0] - P[i][0], q[1] - P[i][1]), 0);
+    const outerC = [[hb2 + ex, yE], [Lt2, et], [Lt2, 0], [-Lt2, 0], [-Lt2, et], [-hb2 - ex, yE]];
+    const innerC = [[hb2, yE], [hb1, et], [-hb1, et], [-hb2, yE]];
+    const sgO = lineOff(outerC[0], outerC[1], 1)[0][0] < outerC[0][0] ? 1 : -1, sgI = lineOff(innerC[0], innerC[1], 1)[0][0] > innerC[0][0] ? 1 : -1;
+    const out = [];
+    for (let z = sH / 2; z <= p.Ht - c + 1e-9; z += sH) {
+      const t = z <= p.Hp - c ? 1 : Math.min(1, Math.max(0, (p.Ht - c - z) / (p.Ht - p.Hp)));
+      const yEnd = Math.min(yE - c, et + t * p.La);
+      const O = offsetPath(outerC, sgO * c, yEnd), I = offsetPath(innerC, sgI * c, yEnd);
+      out.push({ z, t, O, I, LO: len(O), LI: len(I), furo: z < p.D + c, dob: p.ea - 2 * c });
+    }
+    return out;
   }
 
   /* ----- posições das barras (N1 a N4) -----
@@ -129,8 +161,14 @@ const AlasArm = (function () {
     s += vBr(L - bd + c, L - c, -el - hd + c, -c, 'A') + vBr(L - c, L - bd + c + o, -el - hd + c + o, -c - o, 'B');
     const s4 = et + 24, b4 = Math.max(p.ea - 2 * c, 3), zt4 = p.Ht + (p.Hp - p.Ht) * ((s4 + b4 - et) / (L - et)) - c;
     s += vBr(s4, s4 + b4, -el + c, zt4, 'A2') + vBr(s4 + b4, s4 + o, -el + c + o, zt4 - o, 'B2');
+    // N5: camadas horizontais na vista da ala e pontos nas faces da testa
+    hLayers(p, a).forEach(R => {
+      const sEnd = R.t >= 1 ? L - c : et + (p.Ht - c - R.z) / (p.Ht - p.Hp) * (L - et);
+      s += `<line x1="${X(et + 1)}" y1="${Z(R.z)}" x2="${X(sEnd)}" y2="${Z(R.z)}" stroke="var(--hz,#7a3fb0)" stroke-width="1.8"/>`;
+      if (R.z > p.D) [c + 1, et - c - 1].forEach(x => { s += `<circle cx="${X(x)}" cy="${Z(R.z)}" r="2.4" fill="var(--hz,#7a3fb0)"/>`; });
+    });
     const tg = (x, y, t, col) => `<text class="tg" x="${x}" y="${y}" text-anchor="middle" fill="var(--${col})">${t}</text>`;
-    s += tg(X(et / 2), Z(p.Ht) - 8, 'N1', 'aco') + tg(X(L * 0.5), Z(-c) - 8, 'N2', 'aco') + tg(X(L - bd / 2), Z(-el - hd) + 18, 'N3', 'aco') + tg(X(s4 + b4 / 2), Z(zt4) - 8, 'N4', 'aco2');
+    s += tg(X(L) - 22, Z(p.Hp) - 10, 'N5', 'hz') + tg(X(et / 2), Z(p.Ht) - 8, 'N1', 'aco') + tg(X(L * 0.5), Z(-c) - 8, 'N2', 'aco') + tg(X(L - bd / 2), Z(-el - hd) + 18, 'N3', 'aco') + tg(X(s4 + b4 / 2), Z(zt4) - 8, 'N4', 'aco2');
     s += `<text class="su" x="${X(et + 4)}" y="${Z(p.Ht) - 26}">vista da ala</text>`;
     // ---- detalhe: as duas barras de cada posição, lado a lado
     const kd = Math.min(1.25, 230 / Math.max(POS[0].reto, POS[3].reto), 420 / POS[1].reto);
@@ -161,6 +199,26 @@ const AlasArm = (function () {
     return G.svgWrap(W, H, s);
   }
 
-  return { DEF, CAA, BITOLAS, ELEM, check, bars, cutBars, flex, vrd1, rhoMin, asBar };
+  /* ----- planta com a camada 1 da armadura horizontal (vai até a ponta) ----- */
+  function planHz(p, a, W = 560, H = 400) {
+    const c = a.cob, r = p.D / 2, et = p.et, Ls = hLayers(p, a);
+    if (!Ls.length) return G.plan(p, W, H);
+    const R = Ls[0];
+    return G.plan(p, W, H, (X, Y) => {
+      const P = pts => pts.map(([x, y]) => `${X(x).toFixed(1)},${Y(y).toFixed(1)}`).join(' ');
+      const split = (pts, yF) => { const A1 = [], B1 = []; let side = A1; pts.forEach((q, i) => { if (i && Math.abs(q[1] - yF) < 1e-6 && Math.abs(pts[i - 1][1] - yF) < 1e-6 && pts[i - 1][0] * q[0] < 0) { const xs = Math.sign(pts[i - 1][0]) * (r + c); side.push([xs, yF]); side = B1; side.push([-xs, yF]); } side.push(q); }); return [A1, B1]; };
+      const yO = c, yI = et - c, [O1, O2] = R.furo ? split(R.O, yO) : [R.O, []], [I1, I2] = R.furo ? split(R.I, yI) : [R.I, []];
+      let g = [O1, O2].filter(x => x.length > 1).map(x => `<polyline points="${P(x)}" fill="none" stroke="var(--hz,#7a3fb0)" stroke-width="2.4" stroke-linejoin="round"/>`).join('');
+      g += [I1, I2].filter(x => x.length > 1).map(x => `<polyline points="${P(x)}" fill="none" stroke="var(--hz-b,#b07fdc)" stroke-width="2.4" stroke-dasharray="7 3" stroke-linejoin="round"/>`).join('');
+      g += `<polyline points="${P([R.O[0], R.I[0]])}" fill="none" stroke="var(--hz,#7a3fb0)" stroke-width="2.4"/><polyline points="${P([R.O[R.O.length - 1], R.I[R.I.length - 1]])}" fill="none" stroke="var(--hz,#7a3fb0)" stroke-width="2.4"/>`;
+      if (R.furo) [-1, 1].forEach(sg => { g += `<polyline points="${P([[sg * (r + c), yO], [sg * (r + c), yI]])}" fill="none" stroke="var(--hz,#7a3fb0)" stroke-width="2.4"/>`; });
+      const lb = 'font-weight="700" font-size="12" font-family="IBM Plex Mono, Consolas, monospace"';
+      g += `<text x="${X(R.O[2][0]) + 8}" y="${Y(0) - 6}" ${lb} fill="var(--hz,#7a3fb0)" paint-order="stroke" stroke="var(--fundo,#fff)" stroke-width="4">N5 externa</text>`;
+      g += `<text x="${X(p.b1 / 2 + 30)}" y="${Y(et + 30)}" ${lb} fill="var(--hz-b,#b07fdc)" paint-order="stroke" stroke="var(--fundo,#fff)" stroke-width="4">N5 interna</text>`;
+      return g;
+    });
+  }
+
+  return { DEF, CAA, BITOLAS, ELEM, check, bars, hLayers, cutBars, planHz, flex, vrd1, rhoMin, asBar };
 })();
 if (typeof module !== 'undefined' && module.exports) module.exports = { AlasArm };

@@ -1,0 +1,135 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><title>Esboço da armadura horizontal</title>
+<script src="../app/desenho.js"></script>
+<style>
+  :root{--bg:#eef1f4;--card:#fff;--ink:#1d2430;--muted:#5b6676;--line:#d9dee5;--field:#fbfcfd;--unit:#f1f3f6;--accent:#1f6f5c;--accent-soft:#e3f2ec;
+    --aco:#b42318;--aco-b:#e0662f;--aco2:#2563b0;--aco2-b:#5b8fd6;--hz:#7a3fb0;--hz-b:#b07fdc;--new:#fff6d6;--new-line:#e7c34a}
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);font:13px/1.4 'IBM Plex Sans','Segoe UI',Arial,sans-serif;color:var(--ink);padding:18px;width:1440px}
+  .wrap{display:grid;grid-template-columns:360px 1fr;gap:14px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:8px}
+  .card>h2{margin:0;font-size:13px;font-weight:600;padding:9px 14px;border-bottom:1px solid var(--line);display:flex;gap:8px;align-items:center}
+  .card>h2 .esc{margin-left:auto;color:var(--muted);font-weight:400;font-size:12px}
+  .n{display:inline-flex;width:20px;height:20px;border-radius:50%;background:var(--accent);color:#fff;font-size:11px;align-items:center;justify-content:center}
+  .grp{padding:10px 14px 6px}
+  .grp h3{margin:0 0 6px;font-size:11.5px;text-transform:uppercase;letter-spacing:.6px;color:var(--accent);font-weight:600}
+  .grp h3 span{text-transform:none;letter-spacing:0;color:var(--muted);font-weight:400}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:6px 10px}
+  .f label{display:block;font-size:11.5px;color:var(--muted);margin-bottom:2px}
+  .in{display:flex;border:1px solid var(--line);border-radius:5px;overflow:hidden;background:var(--field)}
+  .in div{flex:1;padding:5px 7px;font:13px 'IBM Plex Mono',monospace}
+  .in span{padding:5px 7px;color:var(--muted);background:var(--unit);border-left:1px solid var(--line);font-size:11.5px}
+  .new{background:var(--new);border-top:1px dashed var(--new-line);border-bottom:1px dashed var(--new-line)}
+  .badge{display:inline-block;font:600 10.5px 'IBM Plex Sans','Segoe UI',Arial,sans-serif;background:var(--new-line);color:#3d2f00;border-radius:4px;padding:1px 6px;margin-left:6px;text-transform:none;letter-spacing:0}
+  .note{color:var(--muted);font-size:11.5px;margin:6px 14px 12px}
+  .right{display:grid;gap:14px}
+  .figs{display:grid;grid-template-columns:1fr 1fr;gap:0}
+  .fig{padding:6px 10px}
+  .fig h4{margin:4px 4px 0;font-size:12px;font-weight:600}
+  table{width:100%;border-collapse:collapse;font-size:12.5px}
+  th,td{padding:5px 12px;border-bottom:1px solid var(--line);text-align:right;font-family:'IBM Plex Mono',monospace}
+  th{color:var(--muted);font:600 11.5px 'IBM Plex Sans','Segoe UI',Arial,sans-serif}
+  .l{text-align:left;font-family:'IBM Plex Sans','Segoe UI',Arial,sans-serif}
+</style></head>
+<body>
+<div class="wrap">
+  <section class="card">
+    <h2>Dados das armaduras</h2>
+    <div class="grp"><h3>Concreto e ambiente</h3><div class="grid">
+      <div class="f"><label>Resistência do concreto, f<sub>ck</sub></label><div class="in"><div>C25</div><span>MPa</span></div></div>
+      <div class="f"><label>Cobrimento nominal, c</label><div class="in"><div>3</div><span>cm</span></div></div></div></div>
+    <div class="grp"><h3>Laje de fundo <span>· vale também para o dente</span></h3><div class="grid">
+      <div class="f"><label>Bitola, ø</label><div class="in"><div>8</div><span>mm</span></div></div>
+      <div class="f"><label>Espaçamento, s</label><div class="in"><div>20</div><span>cm</span></div></div></div></div>
+    <div class="grp"><h3>Testa <span>· vertical</span></h3><div class="grid">
+      <div class="f"><label>Bitola, ø</label><div class="in"><div>8</div><span>mm</span></div></div>
+      <div class="f"><label>Espaçamento, s</label><div class="in"><div>20</div><span>cm</span></div></div></div></div>
+    <div class="grp"><h3>Paredes (alas) <span>· vertical</span></h3><div class="grid">
+      <div class="f"><label>Bitola, ø</label><div class="in"><div>8</div><span>mm</span></div></div>
+      <div class="f"><label>Espaçamento, s</label><div class="in"><div>20</div><span>cm</span></div></div></div></div>
+    <div class="grp new"><h3>Paredes · armadura horizontal<span class="badge">novo</span></h3><div class="grid">
+      <div class="f"><label>Bitola, ø</label><div class="in"><div>8</div><span>mm</span></div></div>
+      <div class="f"><label>Espaçamento, s</label><div class="in"><div>20</div><span>cm</span></div></div></div>
+      <p class="note" style="margin:6px 0 4px">Corre na horizontal pelas duas alas e pela testa, nas duas faces. Sem cálculo de esforço nesta etapa.</p></div>
+    <p class="note">A testa e as paredes passam a definir só a armadura vertical; a horizontal das duas vem do item novo.</p>
+  </section>
+  <div class="right">
+    <section class="card">
+      <h2><span class="n">1</span>Armadura horizontal N5 <span class="esc">esboço para aprovação · medidas em cm</span></h2>
+      <div class="figs"><div class="fig"><h4>Planta · camada 1 (z = 10 cm), interrompida no furo do tubo</h4><div id="fp"></div></div><div class="fig"><h4>Corte A · camadas na altura</h4><div id="fc"></div></div></div>
+      <table id="tab"></table>
+      <p class="note">Cada camada tem duas barras: uma na face externa e uma na face interna, correndo ala, testa e ala sem emenda. Nas pontas, as duas fecham com dobra de e<sub>a</sub> − 2c, no mesmo padrão das outras posições. As camadas de cima param onde o topo inclinado da ala chega. Nas camadas que cruzam o tubo, a barra da testa é interrompida no furo e fecha com dobra.</p>
+    </section>
+  </div>
+</div>
+<script>
+const G = AlasGeo, p = G.DEF, d = G.derive(p), f = G.f0, c = 3, sH = 20;
+const hb1 = p.b1 / 2, hb2 = p.b2 / 2, ex = d.ex, et = p.et, yE = p.et + p.La, Lt2 = d.Lt / 2, r = p.D / 2;
+// ---- percurso das barras em planta (offset das faces por c, para dentro do concreto)
+function lineOff(a, b, dd) { const dx = b[0] - a[0], dy = b[1] - a[1], L = Math.hypot(dx, dy), nx = -dy / L, ny = dx / L; return [[a[0] + nx * dd, a[1] + ny * dd], [b[0] + nx * dd, b[1] + ny * dd]]; }
+function inter(l1, l2) { const [p1, p2] = l1, [p3, p4] = l2, d1 = [p2[0] - p1[0], p2[1] - p1[1]], d2 = [p4[0] - p3[0], p4[1] - p3[1]], den = d1[0] * d2[1] - d1[1] * d2[0]; if (Math.abs(den) < 1e-12) return p2; const t = ((p3[0] - p1[0]) * d2[1] - (p3[1] - p1[1]) * d2[0]) / den; return [p1[0] + d1[0] * t, p1[1] + d1[1] * t]; }
+function offsetPath(pts, dd, yEnd) {
+  const L = []; for (let i = 0; i < pts.length - 1; i++) L.push(lineOff(pts[i], pts[i + 1], dd));
+  const cut = [[-1e4, yEnd], [1e4, yEnd]], out = [inter(L[0], cut)];
+  for (let i = 0; i < L.length - 1; i++) out.push(inter(L[i], L[i + 1]));
+  out.push(inter(L[L.length - 1], cut)); return out;
+}
+const len = P => P.slice(1).reduce((s, q, i) => s + Math.hypot(q[0] - P[i][0], q[1] - P[i][1]), 0);
+const outerC = [[hb2 + ex, yE], [Lt2, et], [Lt2, 0], [-Lt2, 0], [-Lt2, et], [-hb2 - ex, yE]];
+const innerC = [[hb2, yE], [hb1, et], [-hb1, et], [-hb2, yE]];
+// lado do concreto: externo -> para dentro (sinal +), interno -> para fora (sinal −); conferido pela primeira aresta
+const sgO = lineOff(outerC[0], outerC[1], 1)[0][0] < outerC[0][0] ? 1 : -1, sgI = lineOff(innerC[0], innerC[1], 1)[0][0] > innerC[0][0] ? 1 : -1;
+// camadas: z = s/2, s/2 + s, ... até H_t − c (acima do topo da laje)
+const levels = []; for (let z = sH / 2; z <= p.Ht - c + 1e-9; z += sH) levels.push(z);
+const tOf = z => Math.min(1, Math.max(0, (p.Ht - c - z) / (p.Ht - p.Hp)));   // fração da ala até onde a camada vai
+const rows = levels.map(z => {
+  const t = z <= p.Hp - c ? 1 : tOf(z), yEnd = Math.min(yE - c, et + t * p.La);
+  const O = offsetPath(outerC, sgO * c, yEnd), I = offsetPath(innerC, sgI * c, yEnd);
+  const furo = z < p.D + c;
+  return { z, t, O, I, LO: len(O), LI: len(I), furo, dob: p.ea - 2 * c };
+});
+// ---- planta
+{
+  const W = 520, H = 400, s0 = G.plan(p, W, H);
+  // reaproveita a escala da planta: refaz o cálculo do desenho.js
+  const padL = 70, padR = 110, padT = 110, padB = 70, pipeL = 45, wcm = d.Btot, hcm = d.Ltot + pipeL;
+  const k = Math.min((W - padL - padR) / wcm, (H - padT - padB) / hcm);
+  const ox = padL + (W - padL - padR - wcm * k) / 2 + wcm * k / 2, oy = padT + pipeL * k + (H - padT - padB - hcm * k) / 2;
+  const P = pts => pts.map(([x, y]) => `${(ox + x * k).toFixed(1)},${(oy + y * k).toFixed(1)}`).join(' ');
+  const R = rows[0];   // camada 1: vai até a ponta das alas
+  const fix = (pts, w) => { const a = pts[0], b = pts[pts.length - 1]; return pts; };
+  // dobras nas pontas: liga externo e interno
+  const tipR = [R.O[0], R.I[0]], tipL = [R.O[R.O.length - 1], R.I[R.I.length - 1]];
+  // corta as duas barras no furo do tubo (|x| < r + c), com dobra fechando cada lado
+  const split = (pts, yFace) => { const a = [], b = []; let side = a; pts.forEach((q, i) => { if (i && Math.abs(q[1] - yFace) < 1e-6 && Math.abs(pts[i - 1][1] - yFace) < 1e-6 && pts[i - 1][0] * q[0] < 0) { const xs = Math.sign(pts[i - 1][0]) * (r + c); side.push([xs, yFace]); side = b; side.push([-xs, yFace]); } side.push(q); }); return [a, b]; };
+  const yO = c, yI = et - c, [O1, O2] = R.furo ? split(R.O, yO) : [R.O, []], [I1, I2] = R.furo ? split(R.I, yI) : [R.I, []];
+  let g = [O1, O2].filter(x => x.length).map(x => `<polyline points="${P(x)}" fill="none" stroke="var(--hz)" stroke-width="2.4" stroke-linejoin="round"/>`).join('');
+  g += [I1, I2].filter(x => x.length).map(x => `<polyline points="${P(x)}" fill="none" stroke="var(--hz-b)" stroke-width="2.4" stroke-dasharray="7 3" stroke-linejoin="round"/>`).join('');
+  if (R.furo) [-1, 1].forEach(sg => { g += `<polyline points="${P([[sg * (r + c), yO], [sg * (r + c), yI]])}" fill="none" stroke="var(--hz)" stroke-width="2.4"/>`; });
+  g += `<polyline points="${P(tipR)}" fill="none" stroke="var(--hz)" stroke-width="2.4"/><polyline points="${P(tipL)}" fill="none" stroke="var(--hz)" stroke-width="2.4"/>`;
+  g += `<text x="${ox + (R.O[2][0]) * k + 8}" y="${oy + 0 * k - 6}" font="700 12px monospace" font-weight="700" font-size="12" font-family="IBM Plex Mono, Consolas, monospace" fill="var(--hz)">N5 externa</text>`;
+  g += `<text x="${ox + (hb1 + 30) * k}" y="${oy + (et + 30) * k}" font-weight="700" font-size="12" font-family="IBM Plex Mono, Consolas, monospace" fill="var(--hz-b)">N5 interna</text>`;
+  document.getElementById('fp').innerHTML = s0.replace('</svg>', g + '</svg>');
+}
+// ---- corte: camadas como linhas na vista da ala e pontos na testa
+{
+  const W = 520, H = 400, s0 = G.cut(p, W, H);
+  const padL = 110, padR = 120, padT = 30, padB = 100, pipeL = 60, sA = -pipeL, s1 = d.Ltot, zTop = p.Ht, zBot = -(p.el + p.hd) - G.LM;
+  const wcm = s1 - sA, hcm = zTop - zBot, k = Math.min((W - padL - padR) / wcm, (H - padT - padB) / hcm);
+  const ox = padL + (W - padL - padR - wcm * k) / 2 - sA * k, oy = padT + (H - padT - padB - hcm * k) / 2 + zTop * k;
+  const X = x => ox + x * k, Z = z => oy - z * k, L = d.Ltot;
+  let g = '';
+  rows.forEach(R => {
+    const sEnd = R.z <= p.Hp - c ? L - c : et + (p.Ht - c - R.z) / (p.Ht - p.Hp) * (L - et);
+    g += `<line x1="${X(et + 1)}" y1="${Z(R.z)}" x2="${X(sEnd)}" y2="${Z(R.z)}" stroke="var(--hz)" stroke-width="2"/>`;
+    if (R.z > p.D) [c, et - c].forEach(x => { g += `<circle cx="${X(x)}" cy="${Z(R.z)}" r="2.6" fill="var(--hz)"/>`; });
+    g += `<text x="${X(L) + 6}" y="${Z(R.z) + 4}" font-size="11" font-family="IBM Plex Mono, Consolas, monospace" fill="var(--hz)">${f(R.z)}</text>`;
+  });
+  g += `<text x="${X(et + 4)}" y="${Z(p.Ht) - 6}" font-weight="700" font-size="12" font-family="IBM Plex Mono, Consolas, monospace" fill="var(--hz)">N5 c/${sH}</text>`;
+  document.getElementById('fc').innerHTML = s0.replace('</svg>', g + '</svg>');
+}
+const R0 = v => f(Math.round(v));
+document.getElementById('tab').innerHTML = `<thead><tr><th class="l">Camada</th><th>Altura acima da laje, z (cm)</th><th class="l">Extensão</th><th>Externa: reto (cm)</th><th>Interna: reto (cm)</th><th>Dobras nas pontas (cm)</th><th class="l">Na testa</th></tr></thead><tbody>` +
+  rows.map((R, i) => `<tr><td class="l">${i + 1}</td><td>${f(R.z)}</td><td class="l">${R.t >= 1 ? 'até a ponta das alas' : 'até ' + Math.round(R.t * 100) + ' % da ala'}</td><td>${R0(R.LO)}</td><td>${R0(R.LI)}</td><td>${R0(R.dob)} + ${R0(R.dob)}</td><td class="l">${R.furo ? 'interrompida no furo do tubo' : 'contínua'}</td></tr>`).join('') + '</tbody>';
+</script>
+</body></html>

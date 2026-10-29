@@ -65,7 +65,7 @@ const AlasGeo = (function () {
   <defs><pattern id="magro" width="7" height="7" patternUnits="userSpaceOnUse"><rect width="7" height="7" fill="#f4f1ea"/><circle cx="2" cy="2" r=".8" fill="#8b8579"/><circle cx="5.5" cy="5" r=".6" fill="#8b8579"/></pattern></defs>`;
 
   /* ----- planta ----- */
-  function plan(p, W = 760, H = 470) {
+  function plan(p, W = 760, H = 470, overlay) {
     const d = derive(p), padL = 70, padR = 110, padT = 110, padB = 70;
     const pipeL = 45;                                            // trecho do tubo desenhado a montante
     const wcm = d.Btot, hcm = d.Ltot + pipeL;
@@ -116,11 +116,12 @@ const AlasGeo = (function () {
     s += dim(X(-xa), Y(ya), X(-xa - p.ea * nx), Y(ya - p.ea * ny), 0, f0(p.ea), { noExt: true });
     // marcação do corte A
     s += `<g class="lbl"><text x="${X(0) - 26}" y="${Y(yb - 30)}" font-weight="600">A</text><text x="${X(0) - 26}" y="${Y(yE) + 58}" font-weight="600">A</text></g>`;
+    if (overlay) s += overlay(X, Y, k);
     return svgWrap(W, H, s);
   }
 
   /* ----- corte A (pelo eixo do tubo) ----- */
-  function cut(p, W = 760, H = 400) {
+  function cut(p, W = 760, H = 400, overlay) {
     const d = derive(p), padL = 110, padR = 120, padT = 30, padB = 100;
     const pipeL = 60, s0 = -pipeL, s1 = d.Ltot, zTop = p.Ht, zBot = -(p.el + p.hd) - LM;
     const wcm = s1 - s0, hcm = zTop - zBot;
@@ -161,6 +162,7 @@ const AlasGeo = (function () {
     // rótulo do lastro
     const lx = X(L * 0.5), ly = Z(-el - LM / 2), tx = X(s0) + 10, ty = Z(-el - p.hd - LM) + 12;
     s += `<g class="lbl"><polyline class="th" points="${lx},${ly} ${lx - 18},${ty - 4} ${tx + 210},${ty - 4}"/><text x="${tx + 205}" y="${ty}" text-anchor="end">lastro de concreto magro (${f0(LM)} cm)</text></g>`;
+    if (overlay) s += overlay(X, Z, k);
     return svgWrap(W, H, s);
   }
 

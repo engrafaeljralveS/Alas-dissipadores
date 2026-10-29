@@ -10,7 +10,7 @@
   --warn:#9a5b00; --warn-soft:#fff4dd; --err:#b42318; --err-soft:#fdecea;
   /* desenho */
   --linha:#1d2430; --cota:#334155; --eixo:#8a94a3; --concreto:#bfe9cc; --vista:#f3f6f4; --tubo:#e7ebf0; --fundo:#ffffff;
-  --aco:#b42318; --aco-b:#e0662f; --aco2:#2563b0; --aco2-b:#5b8fd6; --ativo:#c2531b; --ativo-soft:#fde7d6; --passivo:#2563b0; --passivo-soft:#dbe9fb; --solo:#8b6a3e; --ok:#1f7a4d; --ok-soft:#e1f3e8;
+  --hz:#7a3fb0; --hz-b:#b07fdc; --aco:#b42318; --aco-b:#e0662f; --aco2:#2563b0; --aco2-b:#5b8fd6; --ativo:#c2531b; --ativo-soft:#fde7d6; --passivo:#2563b0; --passivo-soft:#dbe9fb; --solo:#8b6a3e; --ok:#1f7a4d; --ok-soft:#e1f3e8;
   --paper:#ffffff; --paper-edge:#cfd6dd;
   --sans:'IBM Plex Sans','Segoe UI',Arial,sans-serif; --mono:'IBM Plex Mono',Consolas,monospace;
 }
@@ -19,14 +19,14 @@
   --accent:#4fb393; --accent-ink:#06140f; --accent-soft:#16302a; --bar:#0b1016; --bar-ink:#ffffff; --bar-muted:#8f9bab;
   --warn:#f0b450; --warn-soft:#2e2412; --err:#f37b70; --err-soft:#341a18;
   --linha:#dbe2ea; --cota:#b7c2cf; --eixo:#6f7b8b; --concreto:#2f6b4f; --vista:#1c252f; --tubo:#2a3440; --fundo:#171e27;
-  --aco:#f37b70; --aco-b:#f5a36b; --aco2:#6ea8f0; --aco2-b:#9cc3f5; --ativo:#f08a4b; --ativo-soft:#3a2416; --passivo:#6ea8f0; --passivo-soft:#16263d; --solo:#c9a46c; --ok:#5cc98f; --ok-soft:#143022;
+  --hz:#c39bea; --hz-b:#a37cc9; --aco:#f37b70; --aco-b:#f5a36b; --aco2:#6ea8f0; --aco2-b:#9cc3f5; --ativo:#f08a4b; --ativo-soft:#3a2416; --passivo:#6ea8f0; --passivo-soft:#16263d; --solo:#c9a46c; --ok:#5cc98f; --ok-soft:#143022;
   color-scheme:dark}}
 :root[data-theme="dark"]{
   --bg:#10151c; --card:#171e27; --ink:#e4e9ef; --muted:#97a3b3; --line:#2b3542; --field:#121820; --unit:#1d2530;
   --accent:#4fb393; --accent-ink:#06140f; --accent-soft:#16302a; --bar:#0b1016; --bar-ink:#ffffff; --bar-muted:#8f9bab;
   --warn:#f0b450; --warn-soft:#2e2412; --err:#f37b70; --err-soft:#341a18;
   --linha:#dbe2ea; --cota:#b7c2cf; --eixo:#6f7b8b; --concreto:#2f6b4f; --vista:#1c252f; --tubo:#2a3440; --fundo:#171e27;
-  --aco:#f37b70; --aco-b:#f5a36b; --aco2:#6ea8f0; --aco2-b:#9cc3f5; --ativo:#f08a4b; --ativo-soft:#3a2416; --passivo:#6ea8f0; --passivo-soft:#16263d; --solo:#c9a46c; --ok:#5cc98f; --ok-soft:#143022;
+  --hz:#c39bea; --hz-b:#a37cc9; --aco:#f37b70; --aco-b:#f5a36b; --aco2:#6ea8f0; --aco2-b:#9cc3f5; --ativo:#f08a4b; --ativo-soft:#3a2416; --passivo:#6ea8f0; --passivo-soft:#16263d; --solo:#c9a46c; --ok:#5cc98f; --ok-soft:#143022;
   color-scheme:dark}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
@@ -116,7 +116,7 @@ table.res .l{text-align:left;font-family:var(--sans)}
 @media (prefers-reduced-motion: reduce){*{transition:none!important}}
 </style>
 
-<header><div class="wrap"><h1>Alas</h1><span class="sub">Alas de bueiro em concreto armado: geometria, empuxos, esforços e armaduras</span><span class="ver">v1.6 · medidas em cm</span></div></header>
+<header><div class="wrap"><h1>Alas</h1><span class="sub">Alas de bueiro em concreto armado: geometria, empuxos, esforços e armaduras</span><span class="ver">v1.7 · medidas em cm</span></div></header>
 <nav class="tabs" aria-label="Etapas"><div class="wrap" role="tablist">
   <button role="tab" id="tab-geo" aria-selected="true" data-tab="geo">Geometria</button>
   <button role="tab" id="tab-esf" aria-selected="false" data-tab="esf">Esforços</button>
@@ -169,14 +169,17 @@ table.res .l{text-align:left;font-family:var(--sans)}
       <h2>Dados das armaduras</h2>
       <div id="alerts-arm"></div>
       <div id="fields-arm"></div>
-      <p class="note">Aço CA-50. Cada armadura vale para as duas faces do elemento e para as duas direções (vertical e horizontal na testa e nas paredes; longitudinal e transversal na laje). A armadura do dente é a da laje de fundo.</p>
+      <p class="note">Aço CA-50. Cada armadura vale para as duas faces do elemento. Na laje de fundo, nas duas direções; a armadura do dente é a da laje. Na testa e nas paredes, a armadura do item é a vertical; a horizontal das duas vem do item Paredes · armadura horizontal.</p>
       <div class="grp"><h3 class="sect">Situação</h3></div>
       <div id="verif-arm"></div>
     </section></aside>
     <div class="right">
       <section class="card"><h2><span class="n">1</span>Armaduras no corte A <span class="esc">cada estribo: 2 barras iguais, uma espelhada · medidas em cm</span></h2><div class="fig" id="fig-arm"></div><div class="tw" id="arm-pos"></div>
         <p class="note">Cada posição é uma barra com dobra + reto + dobra; a dobra é a espessura do elemento menos os dois cobrimentos. A segunda barra é a mesma, espelhada na face oposta, e as duas juntas fecham o estribo (no corte, a tracejada é a espelhada). Medidas pelas faces externas das barras, sem ganchos nem traspasse.</p></section>
-      <section class="card"><h2><span class="n">2</span>Dimensionamento por faixa de 1 m <span class="esc">NBR 6118 · γ<sub>f</sub> = 1,4 · γ<sub>c</sub> = 1,4 · γ<sub>s</sub> = 1,15</span></h2><div class="tw" id="arm-res"></div>
+      <section class="card"><h2><span class="n">2</span>Armadura horizontal N5 <span class="esc" id="hz-sum"></span></h2>
+        <div class="fig" id="fig-hz" style="max-width:640px;margin:0 auto"></div><div class="tw" id="hz-tab"></div>
+        <p class="note">Planta da camada 1, que vai até a ponta das alas. Cada camada tem duas barras, uma na face externa e uma na face interna, correndo ala, testa e ala sem emenda; nas pontas, as duas fecham com dobra de e<sub>a</sub> − 2c. As camadas de cima param onde o topo inclinado da ala chega. Nas camadas que cruzam o tubo, a barra da testa é interrompida no furo e fecha com dobra.</p></section>
+      <section class="card"><h2><span class="n">3</span>Dimensionamento por faixa de 1 m <span class="esc">NBR 6118 · γ<sub>f</sub> = 1,4 · γ<sub>c</sub> = 1,4 · γ<sub>s</sub> = 1,15</span></h2><div class="tw" id="arm-res"></div>
         <p class="note">d medido até a camada externa: d = h − c − ø/2. As,mín por face com ρ<sub>mín</sub> da Tabela 17.3. Espaçamento máximo: o menor entre 2h e 20 cm. Bitola máxima: h/8. Cortante sem estribos: V<sub>Sd</sub> ≤ V<sub>Rd1</sub> (19.4.1). A laje de fundo recebe no engaste o maior momento das paredes.</p></section>
     </div>
   </main>
@@ -362,18 +365,23 @@ table.res .l{text-align:left;font-family:var(--sans)}
     `</div></div>` +
     AR.ELEM.map(([k, nome, obs]) => `<div class="grp"><h3>${nome}${obs ? ` <span style="text-transform:none;letter-spacing:0;color:var(--muted);font-weight:400">· ${obs}</span>` : ''}</h3><div class="grid">` +
       fld(k + '_phi', 'Bitola, ø', sel(k + '_phi', AR.BITOLAS.map(v => [v, f(v)]), astate[k + '_phi']), 'mm') +
-      fld(k + '_s', 'Espaçamento, s', numIn(k + '_s', astate[k + '_s']), 'cm') + `</div></div>`).join('');
+      fld(k + '_s', 'Espaçamento, s', numIn(k + '_s', astate[k + '_s']), 'cm') + `</div></div>`).join('') +
+    `<div class="grp"><h3>Paredes · armadura horizontal</h3><div class="grid">` +
+      fld('ph_phi', 'Bitola, ø', sel('ph_phi', AR.BITOLAS.map(v => [v, f(v)]), astate.ph_phi), 'mm') +
+      fld('ph_s', 'Espaçamento, s', numIn('ph_s', astate.ph_s), 'cm') +
+    `</div><p class="note" style="padding:0;margin:6px 0 0">Corre na horizontal pelas duas alas e pela testa, nas duas faces. Sem cálculo de esforço nesta versão.</p></div>`;
+  const AK = AR.ELEM.map(([k]) => k).concat(['ph']);
   let araw = {};
   function validateArm(a) {
     const e = {};
     if (!(a.cob > 0) || a.cob > 10) e.cob = 'Informe um cobrimento entre 0 e 10 cm.';
-    AR.ELEM.forEach(([k]) => { if (!(a[k + '_s'] >= 5) || a[k + '_s'] > 50) e[k + '_s'] = 'Informe um espaçamento entre 5 e 50 cm.'; });
+    AK.forEach(k => { if (!(a[k + '_s'] >= 5) || a[k + '_s'] > 50) e[k + '_s'] = 'Informe um espaçamento entre 5 e 50 cm.'; });
     return e;
   }
   function renderArm() {
     if (!lastR) return;
     const a = Object.assign({}, astate, araw), errs = validateArm(a);
-    ['cob'].concat(AR.ELEM.map(([k]) => k + '_s')).forEach(k => { el('f-' + k).classList.toggle('bad', !!errs[k]); el('m-' + k).textContent = errs[k] || ''; });
+    ['cob'].concat(AK.map(k => k + '_s')).forEach(k => { el('f-' + k).classList.toggle('bad', !!errs[k]); el('m-' + k).textContent = errs[k] || ''; });
     const n = Object.keys(errs).length;
     el('alerts-arm').innerHTML = n ? `<div class="alert">${n === 1 ? 'Um campo precisa' : n + ' campos precisam'} de ajuste. O dimensionamento usa os últimos valores válidos.</div>` : '';
     if (!n) { astate = a; araw = {}; try { localStorage.setItem(AKEY, JSON.stringify(astate)); } catch (e) {} }
@@ -382,6 +390,10 @@ table.res .l{text-align:left;font-family:var(--sans)}
     el('verif-arm').innerHTML = `<div class="verif ${A.ok && !A.warn.length ? 'ok' : 'no'}"><span>${A.ok ? 'As três armaduras atendem às verificações.' : 'Não atende: ' + bad.join(', ') + '. Veja a tabela.'}</span>${A.warn.map(w => `<span>${w}</span>`).join('')}</div>`;
     el('fig-arm').innerHTML = AR.cutBars(state, A, astate);
     const BB = AR.bars(state, astate), rw = key => A.rows.find(x => x.k === key), R0 = v => f(Math.round(v));
+    const HL = AR.hLayers(state, astate);
+    el('fig-hz').innerHTML = AR.planHz(state, astate, 560, 400);
+    el('hz-tab').innerHTML = `<table class="res"><thead><tr><th class="l">Camada</th><th>z acima da laje (cm)</th><th class="l">Extensão</th><th>Externa: reto (cm)</th><th>Interna: reto (cm)</th><th>Dobras nas pontas (cm)</th><th class="l">Na testa</th></tr></thead><tbody>${HL.map((R, i) => `<tr><td class="l">${i + 1}</td><td>${f(R.z)}</td><td class="l">${R.t >= 1 ? 'até a ponta das alas' : 'até ' + Math.round(R.t * 100) + ' % da ala'}</td><td>${R0(R.LO)}</td><td>${R0(R.LI)}</td><td>${R0(R.dob)} + ${R0(R.dob)}</td><td class="l">${R.furo ? 'interrompida no furo do tubo' : 'contínua'}</td></tr>`).join('')}</tbody></table>`;
+    el('hz-sum').innerHTML = `<b style="color:var(--hz)">N5</b> ø${f(astate.ph_phi)} c/${f(astate.ph_s)} · ${HL.length} camada${HL.length === 1 ? '' : 's'} · A<sub>s,ef</sub> = ${x2(A.hz.Asef)} cm²/m por face`;
     lastA = A;
     renderMem();
     el('arm-pos').innerHTML = `<table class="res"><thead><tr><th class="l">Posição</th><th class="l">Elemento</th><th class="l">Armadura</th><th class="l">Forma</th><th>Dobra + reto + dobra (cm)</th><th>Cada barra (cm)</th><th>Barras por estribo</th></tr></thead><tbody>${BB.map(b => `<tr><td class="l"><b style="color:var(${b.n === 'N4' ? '--aco2' : '--aco'})">${b.n}</b></td><td class="l">${b.el}</td><td class="l">ø${f(rw(b.k).phi)} c/${f(rw(b.k).s)}</td><td class="l" style="white-space:normal;min-width:240px">${b.form}</td><td>${R0(b.dob)} + ${R0(b.reto)}${b.reto1 != null ? ' a ' + R0(b.reto1) : ''} + ${R0(b.dob)}</td><td>${R0(b.L)}${b.Lmin != null ? ' a ' + R0(b.Lmin) : ''}</td><td>2</td></tr>`).join('')}</tbody></table>`;
@@ -393,12 +405,12 @@ table.res .l{text-align:left;font-family:var(--sans)}
       <td>${ok(r.it.flex)}</td><td>${ok(r.it.min)}</td><td>${ok(r.it.esp)} <span style="color:var(--muted)">${f(r.sMax)}</span></td><td>${ok(r.it.bit)} <span style="color:var(--muted)">${f(r.phiMax)}</span></td>
       <td>${r.Vd == null ? '—' : x2(r.Vd)}</td><td>${r.Vd == null ? '—' : x2(r.VR)}</td><td>${r.Vd == null ? '—' : ok(r.it.cort)}</td></tr>`).join('')}</tbody></table>`;
   }
-  ['fck', 'caa'].concat(AR.ELEM.map(([k]) => k + '_phi')).forEach(k => el('in-' + k).addEventListener('change', ev => {
+  ['fck', 'caa'].concat(AK.map(k => k + '_phi')).forEach(k => el('in-' + k).addEventListener('change', ev => {
     const v = ev.target.value; araw[k] = k === 'caa' ? v : parseFloat(v);
     if (k === 'caa') { const sug = AR.CAA[v].cob; if ((astate.cob || 0) < sug) { el('in-cob').value = f(sug); araw.cob = sug; } }
     renderArm();
   }));
-  ['cob'].concat(AR.ELEM.map(([k]) => k + '_s')).forEach(k => {
+  ['cob'].concat(AK.map(k => k + '_s')).forEach(k => {
     const inp = el('in-' + k);
     inp.addEventListener('input', () => { araw[k] = parse(inp.value); renderArm(); });
     inp.addEventListener('blur', () => { if (!el('f-' + k).classList.contains('bad')) inp.value = f(astate[k]); });
