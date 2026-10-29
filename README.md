@@ -4,6 +4,8 @@ Alas de bueiro em concreto armado: geometria interativa em planta e corte, empux
 
 Programa em um único arquivo HTML (`index.html`), sem dependências: abra no navegador.
 
+**Link fixo (GitHub Pages):** https://engrafaeljralves.github.io/Alas-dissipadores/ — sempre a versão mais recente do `index.html` deste repositório.
+
 ## Abas
 
 - **Geometria**: tubo, testa, alas, laje de fundo, engrossamento sob a testa e dente na ponta; planta e corte A redesenhados a cada valor, na altura do painel de dados. Lastro de concreto magro fixo em 5 cm.
