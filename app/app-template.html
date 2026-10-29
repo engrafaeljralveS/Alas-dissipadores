@@ -504,6 +504,7 @@ table.res .l{text-align:left;font-family:var(--sans)}
     try { prebuildDocx(); } catch (e) { /* antes da inicialização do download */ }
   }
   const say = t => { el('mem-msg').textContent = t; clearTimeout(say.t); say.t = setTimeout(() => { el('mem-msg').textContent = ''; }, 6000); };
+  const sayLong = t => { el('mem-msg').textContent = t; clearTimeout(say.t); say.t = setTimeout(() => { el('mem-msg').textContent = ''; }, 20000); };
   el('mem-copy').addEventListener('click', async () => {
     const text = el('mem-doc').innerText, htmlP = AlasMem.clipHtml(el('mem-doc')).then(x => new Blob([x], { type: 'text/html' }));
     try {
@@ -547,14 +548,17 @@ table.res .l{text-align:left;font-family:var(--sans)}
     const ns = await nsP;
     if (ns && typeof ns.save === 'function') {
       try { const r = await ns.save({ filename: name, data: blob }); say(r && r.status === 'delivered' ? 'Memorial enviado.' : 'Memorial salvo como ' + name + '.'); }
-      catch (e) { const c = e && e.code; say(DL_MSG[c] || ('O download não funcionou aqui' + (c ? ' (' + c + ')' : '') + ': use Copiar para o Word.')); }
+      catch (e) { const c = e && e.code; (DL_MSG[c] ? say : sayLong)(DL_MSG[c] || ('O Claude recusou o download' + (c ? ' (' + c + (e.message ? ': ' + e.message : '') + ')' : '') + '. Use Copiar para o Word e cole num documento em branco.')); }
       return;
     }
+    // dentro do Claude sem a capacidade de download (por exemplo, o app aberto como página própria pelo link):
+    // o download comum do navegador é bloqueado sem aviso, então explicamos o caminho que funciona
+    if (window.claude) { sayLong('Nesta tela o Claude não libera downloads. Abra o Alas pelo cartão do app dentro da conversa e clique de novo, ou use Copiar para o Word e cole num documento em branco.'); return; }
     try {
       const url = URL.createObjectURL(blob), lk = document.createElement('a');
       lk.href = url; lk.download = name; document.body.appendChild(lk); lk.click(); lk.remove();
       setTimeout(() => URL.revokeObjectURL(url), 4000);
-      say('Download do ' + name + ' iniciado. Se não aparecer, use Copiar para o Word.');
+      say('Download do ' + name + ' iniciado.');
     } catch (e) { say('O download não está disponível aqui: use Copiar para o Word.'); }
   });
 
