@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><title>Esboço das armaduras</title>
+<script src="../app/desenho.js"></script>
+<style>
+  :root{--bg:#eef1f4;--card:#fff;--ink:#1d2430;--muted:#5b6676;--line:#d9dee5;--aco:#b42318;--aco-b:#e0662f;--aco2:#2563b0;--aco2-b:#5b8fd6}
+  body{margin:0;background:var(--bg);font:13px/1.4 'IBM Plex Sans','Segoe UI',Arial,sans-serif;color:var(--ink);padding:18px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:8px;width:1180px}
+  h2{margin:0;font-size:13px;font-weight:600;padding:9px 14px;border-bottom:1px solid var(--line);display:flex;gap:8px;align-items:center}
+  h2 .esc{margin-left:auto;color:var(--muted);font-weight:400;font-size:12px}
+  .n{display:inline-flex;width:20px;height:20px;border-radius:50%;background:#1f6f5c;color:#fff;font-size:11px;align-items:center;justify-content:center}
+  .fig{padding:6px 10px}
+  table{width:100%;border-collapse:collapse;font-size:12.5px}
+  th,td{padding:6px 12px;border-bottom:1px solid var(--line);text-align:left}
+  th{color:var(--muted);font-size:11.5px;font-weight:600}
+  td.r,th.r{text-align:right;font-family:'IBM Plex Mono',monospace}
+  .tag{display:inline-block;width:46px;font:700 12px 'IBM Plex Mono',monospace}
+  .tag i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:2px;vertical-align:-1px}
+  p.note{color:var(--muted);font-size:11.5px;margin:8px 14px 12px}
+</style></head>
+<body>
+<div class="card">
+  <h2><span class="n">1</span>Armaduras no corte A <span class="esc">esboço para aprovação · cada estribo = 2 barras iguais, uma espelhada</span></h2>
+  <div class="fig" id="fig"></div>
+  <table id="tab"></table>
+  <p class="note">Cada posição é uma barra com uma parte reta e uma dobra em cada ponta, do tamanho da espessura do elemento menos os dois cobrimentos. A segunda barra é a mesma, espelhada na face oposta: juntas, as duas fecham o estribo. Medidas pelas faces externas das barras, sem ganchos nem traspasse.</p>
+</div>
+<script>
+const G = AlasGeo, p = G.DEF, c = 3, f = G.f0, d = G.derive(p);
+const L = d.Ltot, et = p.et, el = p.el, eg = p.eg, bg = p.bg, ch = Math.max(0, eg - el), bd = p.bd, hd = p.hd;
+const W = 1160, H = 640;
+// posições: reto e dobra (cm)
+const POS = [
+  { n: 'N1', el: 'Testa', dob: et - 2 * c, reto: p.Ht + eg - 2 * c, col: 'aco', txt: 'vertical, nas duas faces da testa; fecha no topo e no fundo do engrossamento' },
+  { n: 'N2', el: 'Laje de fundo', dob: el - 2 * c, reto: L - 2 * c, col: 'aco', txt: 'horizontal, faces superior e inferior; fecha nas duas extremidades da laje' },
+  { n: 'N3', el: 'Dente', dob: bd - 2 * c, reto: hd + el - 2 * c, col: 'aco', txt: 'vertical, nas duas faces do dente; fecha no pé do dente e no topo da laje' },
+  { n: 'N4', el: 'Paredes (alas)', dob: p.ea - 2 * c, reto: p.Ht + el - 2 * c, reto1: p.Hp + el - 2 * c, col: 'aco2', txt: 'vertical, nas duas faces da ala; reto varia ao longo da ala' }
+];
+// ---- corte
+const padL = 330, padR = 330, padT = 40, padB = 210, zTop = p.Ht, zBot = -(el + hd);
+const k = Math.min((W - padL - padR) / L, (H - padT - padB) / (zTop - zBot));
+const ox = padL + (W - padL - padR - L * k) / 2, oy = padT + zTop * k + 10;
+const X = x => ox + x * k, Z = z => oy - z * k;
+const P = pts => pts.map(([x, z]) => `${X(x).toFixed(1)},${Z(z).toFixed(1)}`).join(' ');
+let s = G.STYLE + `<style>
+  .A{fill:none;stroke:var(--aco);stroke-width:2.2;stroke-linejoin:round}
+  .B{fill:none;stroke:var(--aco-b);stroke-width:2.2;stroke-linejoin:round;stroke-dasharray:7 3}
+  .A2{fill:none;stroke:var(--aco2);stroke-width:2.2;stroke-linejoin:round}
+  .B2{fill:none;stroke:var(--aco2-b);stroke-width:2.2;stroke-linejoin:round;stroke-dasharray:7 3}
+  .tg{font:700 12px 'IBM Plex Mono',monospace;paint-order:stroke;stroke:#fff;stroke-width:4px}
+  .ml{font:12px 'IBM Plex Mono',monospace;fill:#334155;paint-order:stroke;stroke:#fff;stroke-width:4px}
+  .ti{font-size:12.5px;font-weight:600;fill:#1d2430}
+  .su{font-size:11.5px;fill:#5b6676}
+</style>`;
+s += `<polygon class="cv" points="${P([[et, 0], [et, p.Ht], [L, p.Hp], [L, 0]])}"/>`;
+s += `<polygon class="c" points="${P([[0, p.Ht], [et, p.Ht], [et, 0], [L, 0], [L, -el - hd], [L - bd, -el - hd], [L - bd, -el], [bg + ch, -el], [bg, -eg], [0, -eg]])}"/>`;
+const o = 1.4; // afastamento só de desenho entre a barra e a espelhada
+// colchete: lado reto em x1 (ou z1), dobras apontando para o outro lado
+const vBr = (x, x2, z1, z2, cls) => `<polyline class="${cls}" points="${P([[x2, z2], [x, z2], [x, z1], [x2, z1]])}"/>`;
+const hBr = (z, z2, x1, x2, cls) => `<polyline class="${cls}" points="${P([[x1, z2], [x1, z], [x2, z], [x2, z2]])}"/>`;
+// N1 testa
+s += vBr(c, et - c, -eg + c, p.Ht - c, 'A') + vBr(et - c, c + o, -eg + c + o, p.Ht - c - o, 'B');
+// N2 laje
+s += hBr(-c, -el + c, c, L - c, 'A') + hBr(-el + c, -c - o, c + o, L - c - o, 'B');
+// N3 dente
+s += vBr(L - bd + c, L - c, -el - hd + c, -c, 'A') + vBr(L - c, L - bd + c + o, -el - hd + c + o, -c - o, 'B');
+// N4 parede (esquemático na vista da ala, junto à testa)
+const s4 = et + 24, b4 = p.ea - 2 * c, zt4 = p.Ht + (p.Hp - p.Ht) * ((s4 + b4 - et) / (L - et)) - c;
+s += vBr(s4, s4 + b4, -el + c, zt4, 'A2') + vBr(s4 + b4, s4 + o, -el + c + o, zt4 - o, 'B2');
+const tg = (x, y, t, col) => `<text class="tg" x="${x}" y="${y}" text-anchor="middle" fill="var(--${col})">${t}</text>`;
+s += tg(X(et / 2), Z(p.Ht) - 8, 'N1', 'aco') + tg(X(L * 0.5), Z(-c) - 8, 'N2', 'aco') + tg(X(L - bd / 2), Z(-el - hd) + 18, 'N3', 'aco') + tg(X(s4 + b4 / 2), Z(zt4) - 8, 'N4', 'aco2');
+s += `<text class="su" x="${X(et + 4)}" y="${Z(p.Ht) - 26}">vista da ala</text>`;
+
+// ---- detalhe das barras: as duas peças lado a lado, como no esboço
+const kd = 1.25;
+const piece = (x0, y0, reto, dob, vertical, mirror, cls) => {
+  // vertical: reto na vertical, dobras horizontais; mirror inverte o lado das dobras
+  const sg = mirror ? -1 : 1;
+  const pts = vertical ? [[x0 + sg * dob * kd, y0], [x0, y0], [x0, y0 + reto * kd], [x0 + sg * dob * kd, y0 + reto * kd]]
+                       : [[x0, y0 + sg * dob * kd], [x0, y0], [x0 + reto * kd, y0], [x0 + reto * kd, y0 + sg * dob * kd]];
+  return `<polyline class="${cls}" points="${pts.map(q => q.join(',')).join(' ')}"/>`;
+};
+const ml = (x, y, t, a = 'middle') => `<text class="ml" x="${x}" y="${y}" text-anchor="${a}">${t}</text>`;
+const R0 = v => f(Math.round(v));
+const title = (x, y, P0, a = 'start') => `<text class="ti" x="${x}" y="${y}" text-anchor="${a}"><tspan fill="var(--${P0.col})" font-family="IBM Plex Mono">${P0.n}</tspan> ${P0.el} · 2 barras</text>`;
+// N1 à esquerda (vertical): par "[ ]"
+{ const q = POS[0], h = q.reto * kd, x0 = 120, y0 = Z(p.Ht - c) - 10;
+  s += piece(x0, y0, q.reto, q.dob, true, false, 'A') + piece(x0 + 120, y0, q.reto, q.dob, true, true, 'B');
+  s += ml(x0 + q.dob * kd / 2, y0 - 7, R0(q.dob)) + ml(x0 + q.dob * kd / 2, y0 + h + 17, R0(q.dob)) + ml(x0 + 14 + q.dob * kd, y0 + h / 2 + 4, R0(q.reto), 'start');
+  s += ml(x0 + 120 - q.dob * kd / 2, y0 - 7, R0(q.dob)) + ml(x0 + 120 - q.dob * kd / 2, y0 + h + 17, R0(q.dob)) + ml(x0 + 106 - q.dob * kd, y0 + h / 2 + 4, R0(q.reto), 'end');
+  s += title(x0 - 30, y0 - 28, q); }
+// N4 à direita, no alto (vertical)
+{ const q = POS[3], h = q.reto * kd, x0 = W - 250, y0 = Z(p.Ht - c) - 10;
+  s += piece(x0, y0, q.reto, q.dob, true, false, 'A2') + piece(x0 + 120, y0, q.reto, q.dob, true, true, 'B2');
+  s += ml(x0 + q.dob * kd / 2, y0 - 7, R0(q.dob)) + ml(x0 + q.dob * kd / 2, y0 + h + 17, R0(q.dob)) + ml(x0 + 14 + q.dob * kd, y0 + h / 2 + 4, R0(q.reto) + ' a ' + R0(q.reto1), 'start');
+  s += ml(x0 + 120 - q.dob * kd / 2, y0 - 7, R0(q.dob)) + ml(x0 + 120 - q.dob * kd / 2, y0 + h + 17, R0(q.dob));
+  s += title(x0 - 30, y0 - 28, q); }
+// N2 embaixo (horizontal): uma com as dobras para baixo, outra para cima
+{ const q = POS[1], w = q.reto * kd, x0 = X(L / 2) - w / 2, y0 = Z(zBot) + 70;
+  s += piece(x0, y0, q.reto, q.dob, false, false, 'A') + piece(x0, y0 + 70, q.reto, q.dob, false, true, 'B');
+  s += ml(x0 + w / 2, y0 - 7, R0(q.reto)) + ml(x0 - 8, y0 + q.dob * kd / 2 + 4, R0(q.dob), 'end') + ml(x0 + w + 8, y0 + q.dob * kd / 2 + 4, R0(q.dob), 'start');
+  s += ml(x0 + w / 2, y0 + 70 + 17, R0(q.reto)) + ml(x0 - 8, y0 + 70 - q.dob * kd / 2 + 4, R0(q.dob), 'end') + ml(x0 + w + 8, y0 + 70 - q.dob * kd / 2 + 4, R0(q.dob), 'start');
+  s += title(x0 - 200, y0 + 40, q); }
+// N3 à direita, embaixo (vertical)
+{ const q = POS[2], h = q.reto * kd, x0 = W - 250, y0 = Z(-c) + 30;
+  s += piece(x0, y0, q.reto, q.dob, true, false, 'A') + piece(x0 + 120, y0, q.reto, q.dob, true, true, 'B');
+  s += ml(x0 + q.dob * kd / 2, y0 - 7, R0(q.dob)) + ml(x0 + q.dob * kd / 2, y0 + h + 17, R0(q.dob)) + ml(x0 + 14 + q.dob * kd, y0 + h / 2 + 4, R0(q.reto), 'start');
+  s += ml(x0 + 120 - q.dob * kd / 2, y0 - 7, R0(q.dob)) + ml(x0 + 120 - q.dob * kd / 2, y0 + h + 17, R0(q.dob));
+  s += title(x0 - 30, y0 - 28, q); }
+document.getElementById('fig').innerHTML = G.svgWrap(W, H, s);
+document.getElementById('tab').innerHTML = `<thead><tr><th>Posição</th><th>Elemento</th><th>Forma</th><th class="r">Dobra + reto + dobra (cm)</th><th class="r">Comprimento de cada barra (cm)</th><th class="r">Barras por estribo</th></tr></thead><tbody>` +
+  POS.map(q => `<tr><td><span class="tag" style="color:var(--${q.col})">${q.n}</span></td><td>${q.el}</td><td>${q.txt}</td><td class="r">${R0(q.dob)} + ${R0(q.reto)}${q.reto1 ? ' a ' + R0(q.reto1) : ''} + ${R0(q.dob)}</td><td class="r">${R0(2 * q.dob + q.reto)}${q.reto1 ? ' a ' + R0(2 * q.dob + q.reto1) : ''}</td><td class="r">2 (uma espelhada)</td></tr>`).join('') + '</tbody>';
+</script>
+</body></html>

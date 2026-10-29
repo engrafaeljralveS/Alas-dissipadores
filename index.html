@@ -1,0 +1,1217 @@
+<title>Alas</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout A: barra escura com abas; painel de dados à esquerda; planta e corte empilhados à direita */
+:root{
+  --bg:#eef1f4; --card:#ffffff; --ink:#1d2430; --muted:#5b6676; --line:#d9dee5; --field:#fbfcfd; --unit:#f1f3f6;
+  --accent:#1f6f5c; --accent-ink:#ffffff; --accent-soft:#e3f2ec; --bar:#17212e; --bar-ink:#ffffff; --bar-muted:#aab6c5;
+  --warn:#9a5b00; --warn-soft:#fff4dd; --err:#b42318; --err-soft:#fdecea;
+  /* desenho */
+  --linha:#1d2430; --cota:#334155; --eixo:#8a94a3; --concreto:#bfe9cc; --vista:#f3f6f4; --tubo:#e7ebf0; --fundo:#ffffff;
+  --aco:#b42318; --aco-b:#e0662f; --aco2:#2563b0; --aco2-b:#5b8fd6; --ativo:#c2531b; --ativo-soft:#fde7d6; --passivo:#2563b0; --passivo-soft:#dbe9fb; --solo:#8b6a3e; --ok:#1f7a4d; --ok-soft:#e1f3e8;
+  --paper:#ffffff; --paper-edge:#cfd6dd;
+  --sans:'IBM Plex Sans','Segoe UI',Arial,sans-serif; --mono:'IBM Plex Mono',Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#10151c; --card:#171e27; --ink:#e4e9ef; --muted:#97a3b3; --line:#2b3542; --field:#121820; --unit:#1d2530;
+  --accent:#4fb393; --accent-ink:#06140f; --accent-soft:#16302a; --bar:#0b1016; --bar-ink:#ffffff; --bar-muted:#8f9bab;
+  --warn:#f0b450; --warn-soft:#2e2412; --err:#f37b70; --err-soft:#341a18;
+  --linha:#dbe2ea; --cota:#b7c2cf; --eixo:#6f7b8b; --concreto:#2f6b4f; --vista:#1c252f; --tubo:#2a3440; --fundo:#171e27;
+  --aco:#f37b70; --aco-b:#f5a36b; --aco2:#6ea8f0; --aco2-b:#9cc3f5; --ativo:#f08a4b; --ativo-soft:#3a2416; --passivo:#6ea8f0; --passivo-soft:#16263d; --solo:#c9a46c; --ok:#5cc98f; --ok-soft:#143022;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#10151c; --card:#171e27; --ink:#e4e9ef; --muted:#97a3b3; --line:#2b3542; --field:#121820; --unit:#1d2530;
+  --accent:#4fb393; --accent-ink:#06140f; --accent-soft:#16302a; --bar:#0b1016; --bar-ink:#ffffff; --bar-muted:#8f9bab;
+  --warn:#f0b450; --warn-soft:#2e2412; --err:#f37b70; --err-soft:#341a18;
+  --linha:#dbe2ea; --cota:#b7c2cf; --eixo:#6f7b8b; --concreto:#2f6b4f; --vista:#1c252f; --tubo:#2a3440; --fundo:#171e27;
+  --aco:#f37b70; --aco-b:#f5a36b; --aco2:#6ea8f0; --aco2-b:#9cc3f5; --ativo:#f08a4b; --ativo-soft:#3a2416; --passivo:#6ea8f0; --passivo-soft:#16263d; --solo:#c9a46c; --ok:#5cc98f; --ok-soft:#143022;
+  color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+body{background:var(--bg);color:var(--ink);font:13px/1.4 var(--sans)}
+.wrap{padding-left:max(16px, env(safe-area-inset-left, 0px));padding-right:max(16px, env(safe-area-inset-right, 0px))}
+header{background:var(--bar);color:var(--bar-ink)}
+header .wrap{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;padding-block:12px 4px}
+header h1{margin:0;font-size:20px;letter-spacing:.3px}
+header .sub{color:var(--bar-muted);font-size:12.5px}
+header .ver{margin-left:auto;color:var(--bar-muted);font:12px var(--mono)}
+nav.tabs{background:var(--bar)}
+nav.tabs .wrap{display:flex;gap:2px;padding-block:6px 0;overflow-x:auto}
+nav.tabs button{border:0;background:transparent;color:var(--bar-muted);font:500 12.5px var(--sans);padding:8px 16px;border-radius:6px 6px 0 0;cursor:pointer;white-space:nowrap}
+nav.tabs button:hover{color:var(--bar-ink)}
+nav.tabs button[aria-selected="true"]{background:var(--bg);color:var(--ink);font-weight:600}
+nav.tabs button:focus-visible{outline:2px solid var(--accent);outline-offset:-2px}
+nav.tabs .soon{font-size:10px;opacity:.7;margin-left:5px}
+main{display:grid;grid-template-columns:370px minmax(0,1fr);gap:14px;padding-block:14px 24px;align-items:start}
+.card{background:var(--card);border:1px solid var(--line);border-radius:8px;min-width:0}
+.card > h2{margin:0;font-size:13px;font-weight:600;padding:9px 14px;border-bottom:1px solid var(--line);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.card > h2 .esc{margin-left:auto;color:var(--muted);font-weight:400;font-size:12px}
+.n{display:inline-flex;width:20px;height:20px;border-radius:50%;background:var(--accent);color:var(--accent-ink);font-size:11px;align-items:center;justify-content:center;font-weight:600}
+aside .card{position:sticky;top:calc(env(safe-area-inset-top, 0px) + 10px)}
+.grp{padding:10px 14px 4px}
+.grp h3,.sect{margin:0 0 6px;font-size:11.5px;text-transform:uppercase;letter-spacing:.6px;color:var(--accent);font-weight:600}
+.grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:6px 10px}
+.f{min-width:0;display:flex;flex-direction:column;justify-content:flex-end}
+.f label{display:block;font-size:11.5px;color:var(--muted);margin-bottom:2px}
+.f .in{display:flex;border:1px solid var(--line);border-radius:5px;overflow:hidden;background:var(--field)}
+.f .in:focus-within{border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
+.f input{flex:1;min-width:0;border:0;background:transparent;color:var(--ink);padding:5px 7px;font:13px var(--mono);outline:none}
+.f select{flex:1;min-width:0;border:0;background:transparent;color:var(--ink);padding:5px 4px;font:13px var(--mono);outline:none}
+.f select option{background:var(--card);color:var(--ink)}
+.f .in span{padding:5px 7px;color:var(--muted);background:var(--unit);border-left:1px solid var(--line);font-size:11.5px}
+.f.bad .in{border-color:var(--err);box-shadow:0 0 0 2px var(--err-soft)}
+.f .msg{font-size:11px;color:var(--err);margin-top:2px;min-height:0}
+.calc{margin:6px 14px 12px;background:var(--accent-soft);border-radius:6px;padding:8px 10px;font-size:12px}
+.calc table{width:100%;border-collapse:collapse}
+.calc td{padding:2px 0;font-size:12px}
+.calc td:last-child{text-align:right;font:600 12px var(--mono)}
+.actions{display:flex;gap:8px;padding:0 14px 14px}
+.btn{border:1px solid var(--line);background:var(--field);color:var(--ink);border-radius:5px;padding:5px 10px;font:500 12px var(--sans);cursor:pointer}
+.btn:hover{border-color:var(--accent)}
+.btn:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.right{display:grid;gap:14px;min-width:0}
+.fig{padding:6px 10px 10px;overflow-x:auto}
+.fig svg{display:block;width:100%;height:auto;min-width:560px}
+.alert{margin:10px 14px 0;padding:7px 10px;border-radius:6px;font-size:12px;background:var(--err-soft);color:var(--err)}
+.foot{color:var(--muted);font-size:11.5px;padding-block:0 18px}
+.placeholder{padding:40px 24px;text-align:center;color:var(--muted)}
+.placeholder h2{color:var(--ink);font-size:15px;margin:0 0 6px}
+table.res{width:100%;border-collapse:collapse;font-size:12.5px}
+table.res th,table.res td{padding:6px 10px;border-bottom:1px solid var(--line);text-align:right;white-space:nowrap}
+table.res th{font-weight:600;color:var(--muted);font-size:11.5px}
+table.res td{font-family:var(--mono);font-variant-numeric:tabular-nums}
+table.res .l{text-align:left;font-family:var(--sans)}
+.tw{overflow-x:auto;padding:4px 4px 8px}
+.pill{display:inline-block;padding:2px 8px;border-radius:999px;font:600 11.5px var(--sans)}
+.pill.ok{background:var(--ok-soft);color:var(--ok)}
+.pill.no{background:var(--err-soft);color:var(--err)}
+.verif{margin:6px 14px 12px;padding:9px 11px;border-radius:6px;font-size:12.5px;display:flex;flex-direction:column;gap:3px}
+.verif.ok{background:var(--ok-soft);color:var(--ok)}
+.verif.no{background:var(--err-soft);color:var(--err)}
+.verif b{font:600 13px var(--mono)}
+.note{color:var(--muted);font-size:11.5px;padding:0 14px 12px;margin:0}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:11.5px;color:var(--muted);padding:0 14px 10px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+.paper{--linha:#1d2430; --cota:#334155; --eixo:#8a94a3; --concreto:#bfe9cc; --vista:#f3f6f4; --tubo:#e7ebf0; --fundo:#ffffff; --ink:#1d2430; background:var(--paper);border:1px solid var(--paper-edge);border-radius:4px;box-shadow:0 1px 3px rgba(0,0,0,.08);padding:36px 44px;max-width:880px;margin:0 auto;overflow-x:auto;color-scheme:light}
+.paperwrap{padding:16px}
+.btns{display:flex;flex-direction:column;gap:8px;padding:6px 14px 6px}
+.btn.primary{background:var(--accent);color:var(--accent-ink);border-color:var(--accent)}
+.msgok{font-size:12px;color:var(--ok);padding:0 14px 6px;min-height:18px}
+.f input.txt{font-family:var(--sans)}
+/* Geometria: planta e corte dividem a altura do painel de dados */
+#pane-geo{align-items:stretch}
+#pane-geo aside .card{position:static}
+#pane-geo .right{grid-template-rows:minmax(0,1fr) minmax(0,1fr)}
+#pane-geo .right .card{display:flex;flex-direction:column;min-height:0}
+#pane-geo .right .fig{position:relative;flex:1;min-height:200px;padding:0;overflow:hidden}
+#pane-geo .right .fig svg{position:absolute;inset:6px 10px;width:calc(100% - 20px);height:calc(100% - 12px);min-width:0}
+@media (max-width: 900px){
+  main{grid-template-columns:minmax(0,1fr)}
+  aside .card{position:static}
+  #pane-geo .right{grid-template-rows:none}
+  #pane-geo .right .fig{flex:none;height:300px}
+}
+@media (prefers-reduced-motion: reduce){*{transition:none!important}}
+</style>
+
+<header><div class="wrap"><h1>Alas</h1><span class="sub">Alas de bueiro em concreto armado: geometria, empuxos, esforços e armaduras</span><span class="ver">v1.6 · medidas em cm</span></div></header>
+<nav class="tabs" aria-label="Etapas"><div class="wrap" role="tablist">
+  <button role="tab" id="tab-geo" aria-selected="true" data-tab="geo">Geometria</button>
+  <button role="tab" id="tab-esf" aria-selected="false" data-tab="esf">Esforços</button>
+  <button role="tab" id="tab-arm" aria-selected="false" data-tab="arm">Armaduras</button>
+  <button role="tab" id="tab-mem" aria-selected="false" data-tab="mem">Memorial</button>
+</div></nav>
+
+<div class="wrap">
+  <main id="pane-geo">
+    <aside><section class="card">
+      <h2>Dados da geometria</h2>
+      <div id="alerts"></div>
+      <div id="fields"></div>
+      <div class="grp"><h3 class="sect">Grandezas calculadas</h3></div>
+      <div class="calc"><table id="calc"></table></div>
+      <div class="actions"><button class="btn" id="reset" type="button">Restaurar valores padrão</button></div>
+    </section></aside>
+    <div class="right">
+      <section class="card"><h2><span class="n">1</span>Planta <span class="esc">medidas em cm</span></h2><div class="fig" id="fig-plan"></div></section>
+      <section class="card"><h2><span class="n">2</span>Corte A <span class="esc">pelo eixo do tubo · medidas em cm</span></h2><div class="fig" id="fig-cut"></div></section>
+    </div>
+  </main>
+  <main id="pane-esf" hidden>
+    <aside><section class="card">
+      <h2>Dados do solo</h2>
+      <div id="alerts-esf"></div>
+      <div id="fields-esf"></div>
+      <div class="grp"><h3 class="sect">Coeficientes de empuxo (Rankine)</h3></div>
+      <div class="calc"><table id="calc-esf"></table></div>
+      <div class="grp"><h3 class="sect">Equilíbrio dos empuxos</h3></div>
+      <div id="verif"></div>
+      <div class="grp"><h3 class="sect">Tensão no solo</h3></div>
+      <div id="verif-solo"></div>
+      <p class="note">Valores característicos, por metro, sem coeficientes de majoração. Solo sem coesão e sem atrito solo-parede.</p>
+    </section></aside>
+    <div class="right">
+      <section class="card"><h2><span class="n">1</span>Empuxos no corte A <span class="esc">ativo na testa · passivo no dente</span></h2>
+        <div class="fig" id="fig-emp"></div>
+        <div class="legend"><span><i style="background:var(--ativo)"></i>empuxo ativo: do fundo da laje sob a testa até o topo</span><span><i style="background:var(--passivo)"></i>empuxo passivo: altura da laje mais o dente</span></div>
+      </section>
+      <section class="card"><h2><span class="n">2</span>Alas engastadas na laje de fundo <span class="esc">faixas verticais de 1 m</span></h2><div class="fig" id="fig-ala"></div>
+        <p class="note">Em cada faixa, o solo tem a altura da ala acima da laje, que cai da altura da testa até a altura da ponta. Momento e cortante na base: M = K<sub>a</sub>·γ·h³/6 e V = K<sub>a</sub>·γ·h²/2.</p></section>
+      <section class="card"><h2><span class="n">3</span>Resumo dos esforços</h2><div class="tw" id="tab-esf-res"></div></section>
+      <section class="card"><h2><span class="n">4</span>Tensão no solo <span class="esc">peso próprio ÷ área de apoio</span></h2><div class="tw" id="tab-solo"></div>
+        <p class="note">Peso do concreto armado com γ<sub>c</sub> = 25 kN/m³. A área de apoio é o contorno externo da laje de fundo em planta (testa mais o trapézio das alas). Sem o lastro, o solo sobre a estrutura e a água no bueiro.</p></section>
+    </div>
+  </main>
+  <main id="pane-arm" hidden>
+    <aside><section class="card">
+      <h2>Dados das armaduras</h2>
+      <div id="alerts-arm"></div>
+      <div id="fields-arm"></div>
+      <p class="note">Aço CA-50. Cada armadura vale para as duas faces do elemento e para as duas direções (vertical e horizontal na testa e nas paredes; longitudinal e transversal na laje). A armadura do dente é a da laje de fundo.</p>
+      <div class="grp"><h3 class="sect">Situação</h3></div>
+      <div id="verif-arm"></div>
+    </section></aside>
+    <div class="right">
+      <section class="card"><h2><span class="n">1</span>Armaduras no corte A <span class="esc">cada estribo: 2 barras iguais, uma espelhada · medidas em cm</span></h2><div class="fig" id="fig-arm"></div><div class="tw" id="arm-pos"></div>
+        <p class="note">Cada posição é uma barra com dobra + reto + dobra; a dobra é a espessura do elemento menos os dois cobrimentos. A segunda barra é a mesma, espelhada na face oposta, e as duas juntas fecham o estribo (no corte, a tracejada é a espelhada). Medidas pelas faces externas das barras, sem ganchos nem traspasse.</p></section>
+      <section class="card"><h2><span class="n">2</span>Dimensionamento por faixa de 1 m <span class="esc">NBR 6118 · γ<sub>f</sub> = 1,4 · γ<sub>c</sub> = 1,4 · γ<sub>s</sub> = 1,15</span></h2><div class="tw" id="arm-res"></div>
+        <p class="note">d medido até a camada externa: d = h − c − ø/2. As,mín por face com ρ<sub>mín</sub> da Tabela 17.3. Espaçamento máximo: o menor entre 2h e 20 cm. Bitola máxima: h/8. Cortante sem estribos: V<sub>Sd</sub> ≤ V<sub>Rd1</sub> (19.4.1). A laje de fundo recebe no engaste o maior momento das paredes.</p></section>
+    </div>
+  </main>
+  <main id="pane-mem" hidden>
+    <aside><section class="card">
+      <h2>Memorial de cálculo</h2>
+      <div class="grp"><h3>Identificação</h3><div class="grid" style="grid-template-columns:minmax(0,1fr)">
+        <div class="f"><label for="in-obra">Obra</label><div class="in"><input class="txt" id="in-obra" autocomplete="off" placeholder="Ex.: Bueiro BSTC ø50, km 12"></div></div>
+        <div class="f"><label for="in-local">Local</label><div class="in"><input class="txt" id="in-local" autocomplete="off" placeholder="Município, UF"></div></div>
+        <div class="f"><label for="in-resp">Responsável técnico</label><div class="in"><input class="txt" id="in-resp" autocomplete="off" placeholder="Nome, CREA"></div></div>
+      </div></div>
+      <div class="btns">
+        <button class="btn primary" id="mem-copy" type="button">Copiar para o Word</button>
+        <button class="btn" id="mem-doc-dl" type="button">Baixar em Word (.docx)</button>
+      </div>
+      <div class="msgok" id="mem-msg" role="status"></div>
+      <p class="note">O memorial é montado com os dados atuais das abas Geometria, Esforços e Armaduras. Baixe o memorial em Word (.docx) ou copie e cole direto num documento aberto (Ctrl+V).</p>
+    </section></aside>
+    <div class="right">
+      <section class="card"><div class="paperwrap"><div class="paper"><div class="mdoc" id="mem-doc"></div></div></div></section>
+    </div>
+  </main>
+  <section class="card placeholder" id="pane-other" hidden><h2 id="ph-title"></h2><p id="ph-text"></p></section>
+  <p class="foot">Cálculo preliminar: valide coeficientes e hipóteses antes de uso em projeto executivo.</p>
+</div>
+
+<script>
+/* =====================================================================
+   Alas · Desenho paramétrico da planta e do corte (SVG)
+   Medidas em cm. Planta: x horizontal (eixo do tubo em x = 0), y para
+   baixo a partir da face de montante da testa. Corte A: s ao longo do
+   eixo (s = 0 na face de montante da testa), z para cima (z = 0 no topo
+   da laje de fundo).
+   ===================================================================== */
+const AlasGeo = (function () {
+  const DEF = {
+    D: 50,      // diâmetro externo do tubo
+    et: 15,     // espessura da testa
+    Ht: 95,     // altura da testa acima da laje
+    ea: 15,     // espessura das alas (perpendicular à face)
+    b1: 90,     // abertura interna entre alas junto à testa
+    b2: 202,    // abertura interna entre alas na ponta
+    La: 113,    // comprimento das alas em planta (da face de jusante da testa à ponta)
+    Hp: 20,     // altura das alas na ponta, acima da laje
+    el: 15,     // espessura da laje de fundo
+    eg: 25,     // espessura total da laje sob a testa (engrossamento)
+    bg: 25,     // largura do engrossamento
+    hd: 25,     // profundidade do dente na ponta, abaixo da laje
+    bd: 15      // largura do dente
+  };
+  const LM = 5;  // lastro de concreto magro: sempre 5 cm
+
+  function derive(p) {
+    const ang = Math.atan(((p.b2 - p.b1) / 2) / p.La);         // abertura de cada ala em relação ao eixo
+    const ex = p.ea / Math.cos(ang);                            // espessura da ala medida na horizontal
+    const Lt = p.b1 + 2 * ex;                                   // comprimento da testa
+    const Ls = p.La / Math.cos(ang);                            // comprimento inclinado da ala
+    const Btot = p.b2 + 2 * ex;                                 // largura total na ponta
+    return { ang, angDeg: ang * 180 / Math.PI, ex, Lt, Ls, Btot, Ltot: p.et + p.La, cob: p.Ht - p.D };
+  }
+
+  /* ----- utilidades de SVG ----- */
+  const f0 = v => (Math.round(v * 10) / 10).toString().replace('.', ',');
+  function svgWrap(W, H, body) {
+    return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="100%" height="100%" font-family="'IBM Plex Sans', 'Segoe UI', Arial, sans-serif">${body}</svg>`;
+  }
+  // cota entre dois pontos (já em px); off = deslocamento perpendicular; txt = valor
+  function dim(x1, y1, x2, y2, off, txt, o = {}) {
+    const dx = x2 - x1, dy = y2 - y1, L = Math.hypot(dx, dy) || 1, nx = -dy / L, ny = dx / L;
+    const ax = x1 + nx * off, ay = y1 + ny * off, bx = x2 + nx * off, by = y2 + ny * off;
+    const ext = (x, y, xa, ya) => `<line x1="${x + nx * Math.sign(off) * 3}" y1="${y + ny * Math.sign(off) * 3}" x2="${xa + nx * Math.sign(off) * 5}" y2="${ya + ny * Math.sign(off) * 5}" class="ext"/>`;
+    const tk = (x, y) => `<line x1="${x - 4 * (dx + dy) / L}" y1="${y - 4 * (dy - dx) / L}" x2="${x + 4 * (dx + dy) / L}" y2="${y + 4 * (dy - dx) / L}" class="tick"/>`;
+    let a = Math.atan2(dy, dx) * 180 / Math.PI; if (a > 90 || a <= -90) a += 180;
+    const mx = (ax + bx) / 2 + nx * (o.tin ? 12 : -6) * Math.sign(off || 1), my = (ay + by) / 2 + ny * (o.tin ? 12 : -6) * Math.sign(off || 1);
+    return `<g class="dim">${o.noExt ? '' : ext(x1, y1, ax, ay) + ext(x2, y2, bx, by)}<line x1="${ax}" y1="${ay}" x2="${bx}" y2="${by}"/>${tk(ax, ay)}${tk(bx, by)}<text x="${mx}" y="${my}" transform="rotate(${a} ${mx} ${my})" text-anchor="middle" dominant-baseline="${o.tin ? 'hanging' : 'auto'}">${txt}</text></g>`;
+  }
+  const STYLE = `<style>
+    .c{fill:var(--concreto,#bfe9cc);stroke:var(--linha,#1d2430);stroke-width:1.6;stroke-linejoin:round}
+    .cv{fill:var(--vista,#f3f6f4);stroke:var(--linha,#1d2430);stroke-width:1.2;stroke-linejoin:round}
+    .ln{fill:none;stroke:var(--linha,#1d2430);stroke-width:1}
+    .th{fill:none;stroke:var(--linha,#1d2430);stroke-width:.6;opacity:.75}
+    .tubo{fill:var(--tubo,#e7ebf0);stroke:var(--linha,#1d2430);stroke-width:1.2}
+    .eixo{stroke:var(--eixo,#8a94a3);stroke-width:.9;stroke-dasharray:14 4 3 4;fill:none}
+    .mag{fill:url(#magro);stroke:var(--linha,#1d2430);stroke-width:.8}
+    .dim line{stroke:var(--cota,#334155);stroke-width:.8}
+    .dim line.ext{stroke-width:.6}
+    .dim line.tick{stroke-width:1.2}
+    .dim text{font-size:12.5px;fill:var(--cota,#334155);font-variant-numeric:tabular-nums;paint-order:stroke;stroke:var(--fundo,#fff);stroke-width:4px;stroke-linejoin:round}
+    .lbl{font-size:12px;fill:var(--cota,#334155)}
+    .lbl text{paint-order:stroke;stroke:var(--fundo,#fff);stroke-width:4px}
+  </style>
+  <defs><pattern id="magro" width="7" height="7" patternUnits="userSpaceOnUse"><rect width="7" height="7" fill="#f4f1ea"/><circle cx="2" cy="2" r=".8" fill="#8b8579"/><circle cx="5.5" cy="5" r=".6" fill="#8b8579"/></pattern></defs>`;
+
+  /* ----- planta ----- */
+  function plan(p, W = 760, H = 470) {
+    const d = derive(p), padL = 70, padR = 110, padT = 110, padB = 70;
+    const pipeL = 45;                                            // trecho do tubo desenhado a montante
+    const wcm = d.Btot, hcm = d.Ltot + pipeL;
+    const k = Math.min((W - padL - padR) / wcm, (H - padT - padB) / hcm);
+    const ox = padL + (W - padL - padR - wcm * k) / 2 + wcm * k / 2, oy = padT + pipeL * k + (H - padT - padB - hcm * k) / 2;
+    const X = x => ox + x * k, Y = y => oy + y * k;
+    const P = pts => pts.map(([x, y]) => `${X(x).toFixed(1)},${Y(y).toFixed(1)}`).join(' ');
+    const yT = p.et, yE = p.et + p.La, hb1 = p.b1 / 2, hb2 = p.b2 / 2, ex = d.ex;
+    let s = STYLE;
+    // laje de fundo (vista de cima, entre as alas)
+    s += `<polygon class="cv" points="${P([[-hb1, yT], [hb1, yT], [hb2, yE], [-hb2, yE]])}"/>`;
+    // linha do dente na ponta (aresta interna do dente, sob a laje)
+    const xdi = hb1 + (p.La - p.bd) / p.La * (hb2 - hb1);
+    s += `<line class="ln" x1="${X(-xdi)}" y1="${Y(yE - p.bd)}" x2="${X(xdi)}" y2="${Y(yE - p.bd)}" stroke-dasharray="6 4"/>`;
+    // alas
+    [-1, 1].forEach(sg => {
+      const pts = [[sg * hb1, yT], [sg * (hb1 + ex), yT], [sg * (hb2 + ex), yE], [sg * hb2, yE]];
+      s += `<polygon class="c" points="${P(pts)}"/>`;
+      // degraus do topo inclinado (linhas perpendiculares à ala)
+      const n = 6;
+      for (let i = 1; i < n; i++) { const t = i / n, yi = yT + t * p.La, xi = hb1 + t * (hb2 - hb1); s += `<line class="th" x1="${X(sg * xi)}" y1="${Y(yi)}" x2="${X(sg * (xi + ex))}" y2="${Y(yi)}"/>`; }
+    });
+    // testa
+    s += `<rect class="c" x="${X(-d.Lt / 2)}" y="${Y(0)}" width="${d.Lt * k}" height="${p.et * k}"/>`;
+    // tubo a montante com quebra ondulada
+    const r = p.D / 2, yb = -pipeL;
+    const wave = `M${X(-r)},${Y(yb + 4)} C${X(-r * 0.5)},${Y(yb - 6)} ${X(-r * 0.1)},${Y(yb + 10)} ${X(0)},${Y(yb + 3)} C${X(r * 0.1)},${Y(yb - 6)} ${X(r * 0.5)},${Y(yb + 10)} ${X(r)},${Y(yb + 2)}`;
+    s += `<path class="tubo" d="${wave} L${X(r)},${Y(0)} L${X(-r)},${Y(0)} Z"/>`;
+    for (let i = 1; i < 10; i++) { const x = -r + i * p.D / 10; s += `<line class="th" x1="${X(x)}" y1="${Y(yb + 8)}" x2="${X(x)}" y2="${Y(0)}"/>`; }
+    // eixo
+    s += `<line class="eixo" x1="${X(0)}" y1="${Y(yb - 25)}" x2="${X(0)}" y2="${Y(yE + 25)}"/>`;
+    // cotas superiores
+    const yc = Y(yb) - 22, cx = [-d.Btot / 2, -d.Lt / 2, -r, r, d.Lt / 2, d.Btot / 2];
+    for (let i = 0; i < cx.length - 1; i++) s += dim(X(cx[i]), yc, X(cx[i + 1]), yc, 0, f0(cx[i + 1] - cx[i]), { noExt: true });
+    cx.forEach(x => { s += `<line class="th" x1="${X(x)}" y1="${yc - 6}" x2="${X(x)}" y2="${x === -r || x === r ? Y(yb) : x === -d.Lt / 2 || x === d.Lt / 2 ? Y(0) : Y(yE)}" stroke-dasharray="${Math.abs(x) === d.Btot / 2 ? '0' : '0'}"/>`; });
+    // abertura junto à testa
+    s += dim(X(-hb1), Y(yT + 12), X(hb1), Y(yT + 12), 0, f0(p.b1), { noExt: true, tin: true });
+    // cotas inferiores
+    const yb2 = Y(yE) + 26;
+    s += dim(X(-d.Btot / 2), yb2, X(-hb2), yb2, 0, f0(ex), { noExt: true, tin: true }) + dim(X(-hb2), yb2, X(hb2), yb2, 0, f0(p.b2), { noExt: true, tin: true }) + dim(X(hb2), yb2, X(d.Btot / 2), yb2, 0, f0(ex), { noExt: true, tin: true });
+    // cotas à direita
+    const xr = X(d.Btot / 2) + 34, xr2 = xr + 34;
+    s += dim(xr, Y(0), xr, Y(yT), 0, f0(p.et), { noExt: true }) + dim(xr, Y(yT), xr, Y(yE - p.bd), 0, f0(p.La - p.bd), { noExt: true }) + dim(xr, Y(yE - p.bd), xr, Y(yE), 0, f0(p.bd), { noExt: true });
+    s += dim(xr2, Y(0), xr2, Y(yE), 0, f0(d.Ltot), { noExt: true });
+    [0, yT, yE - p.bd, yE].forEach(y => { s += `<line class="th" x1="${X(d.Lt / 2 + (y > 0 ? (y - yT) / p.La * (hb2 - hb1) : 0)) + 6}" y1="${Y(y)}" x2="${xr2 + 6}" y2="${Y(y)}"/>`; });
+    // espessura da ala (cota perpendicular)
+    const tm = 0.62, xa = hb1 + tm * (hb2 - hb1), ya = yT + tm * p.La, nx = Math.cos(d.ang), ny = -Math.sin(d.ang);
+    s += dim(X(-xa), Y(ya), X(-xa - p.ea * nx), Y(ya - p.ea * ny), 0, f0(p.ea), { noExt: true });
+    // marcação do corte A
+    s += `<g class="lbl"><text x="${X(0) - 26}" y="${Y(yb - 30)}" font-weight="600">A</text><text x="${X(0) - 26}" y="${Y(yE) + 58}" font-weight="600">A</text></g>`;
+    return svgWrap(W, H, s);
+  }
+
+  /* ----- corte A (pelo eixo do tubo) ----- */
+  function cut(p, W = 760, H = 400) {
+    const d = derive(p), padL = 110, padR = 120, padT = 30, padB = 100;
+    const pipeL = 60, s0 = -pipeL, s1 = d.Ltot, zTop = p.Ht, zBot = -(p.el + p.hd) - LM;
+    const wcm = s1 - s0, hcm = zTop - zBot;
+    const k = Math.min((W - padL - padR) / wcm, (H - padT - padB) / hcm);
+    const ox = padL + (W - padL - padR - wcm * k) / 2 - s0 * k, oy = padT + (H - padT - padB - hcm * k) / 2 + zTop * k;
+    const X = x => ox + x * k, Z = z => oy - z * k;
+    const P = pts => pts.map(([x, z]) => `${X(x).toFixed(1)},${Z(z).toFixed(1)}`).join(' ');
+    const et = p.et, L = d.Ltot, el = p.el, eg = p.eg, bg = p.bg, ch = Math.max(0, eg - el);
+    let s = STYLE;
+    // lastro de concreto magro
+    s += `<polygon class="mag" points="${P([[0, -eg], [bg, -eg], [bg + ch, -el], [L - p.bd, -el], [L - p.bd, -el - LM], [bg + ch, -el - LM], [bg, -eg - LM], [0, -eg - LM]])}"/>`;
+    s += `<rect class="mag" x="${X(L - p.bd)}" y="${Z(-el - p.hd)}" width="${p.bd * k}" height="${LM * k}"/>`;
+    // vista da ala (face interna além do plano de corte)
+    s += `<polygon class="cv" points="${P([[et, 0], [et, p.Ht], [L, p.Hp], [L, 0]])}"/>`;
+    const nv = 8; for (let i = 1; i < nv; i++) { const x = et + i * (L - et) / nv, zt = p.Ht + (p.Hp - p.Ht) * (x - et) / (L - et); s += `<line class="th" x1="${X(x)}" y1="${Z(0)}" x2="${X(x)}" y2="${Z(zt)}"/>`; }
+    // laje de fundo com engrossamento sob a testa e dente na ponta (seção cortada)
+    s += `<polygon class="c" points="${P([[0, 0], [L, 0], [L, -el - p.hd], [L - p.bd, -el - p.hd], [L - p.bd, -el], [bg + ch, -el], [bg, -eg], [0, -eg]])}"/>`;
+    // testa cortada acima do tubo
+    s += `<rect class="c" x="${X(0)}" y="${Z(p.Ht)}" width="${et * k}" height="${(p.Ht - p.D) * k}"/>`;
+    // tubo
+    const wave = `M${X(s0 + 4)},${Z(p.D)} C${X(s0 - 6)},${Z(p.D * 0.8)} ${X(s0 + 10)},${Z(p.D * 0.6)} ${X(s0 + 3)},${Z(p.D / 2)} C${X(s0 - 6)},${Z(p.D * 0.4)} ${X(s0 + 10)},${Z(p.D * 0.2)} ${X(s0 + 2)},${Z(0)}`;
+    s += `<path class="tubo" d="${wave} L${X(et)},${Z(0)} L${X(et)},${Z(p.D)} Z"/>`;
+    for (let i = 1; i < 8; i++) { const z = i * p.D / 8; s += `<line class="th" x1="${X(s0 + 8)}" y1="${Z(z)}" x2="${X(et)}" y2="${Z(z)}"/>`; }
+    s += `<line class="eixo" x1="${X(s0 - 15)}" y1="${Z(p.D / 2)}" x2="${X(et + 30)}" y2="${Z(p.D / 2)}"/>`;
+    // cotas à esquerda
+    const xl = X(s0) - 30, xl2 = xl - 32;
+    s += dim(xl, Z(p.Ht), xl, Z(p.D), 0, f0(p.Ht - p.D), { noExt: true }) + dim(xl, Z(p.D), xl, Z(0), 0, f0(p.D), { noExt: true }) + dim(xl, Z(0), xl, Z(-eg), 0, f0(eg), { noExt: true });
+    s += dim(xl2, Z(p.Ht), xl2, Z(0), 0, f0(p.Ht), { noExt: true }) + dim(xl2, Z(0), xl2, Z(-el - p.hd), 0, f0(el + p.hd), { noExt: true });
+    [[p.Ht, 0], [p.D, s0], [0, 0], [-eg, 0], [-el - p.hd, L - p.bd]].forEach(([z, x0]) => { s += `<line class="th" x1="${xl2 - 6}" y1="${Z(z)}" x2="${X(x0) - 4}" y2="${Z(z)}"/>`; });
+    // cotas à direita
+    const xr = X(L) + 30;
+    s += dim(xr, Z(p.Ht), xr, Z(p.Hp), 0, f0(p.Ht - p.Hp), { noExt: true }) + dim(xr, Z(p.Hp), xr, Z(0), 0, f0(p.Hp), { noExt: true }) + dim(xr, Z(0), xr, Z(-el), 0, f0(el), { noExt: true }) + dim(xr, Z(-el), xr, Z(-el - p.hd), 0, f0(p.hd), { noExt: true });
+    [p.Ht, p.Hp, 0, -el, -el - p.hd].forEach(z => { s += `<line class="th" x1="${z === p.Ht ? X(et) + 4 : X(L) + 4}" y1="${Z(z)}" x2="${xr + 6}" y2="${Z(z)}"/>`; });
+    // cotas inferiores
+    const yb = Z(-el - p.hd - LM) + 26;
+    s += dim(X(0), yb, X(bg), yb, 0, f0(bg), { noExt: true, tin: true }) + dim(X(L - p.bd), yb, X(L), yb, 0, f0(p.bd), { noExt: true, tin: true }) + dim(X(0), yb + 28, X(L), yb + 28, 0, f0(L), { noExt: true, tin: true });
+    [0, bg, L - p.bd, L].forEach(x => { s += `<line class="th" x1="${X(x)}" y1="${Z(x >= L - p.bd ? -el - p.hd - LM : -eg - LM) + 4}" y2="${yb + 34}" x2="${X(x)}"/>`; });
+    // rótulo do lastro
+    const lx = X(L * 0.5), ly = Z(-el - LM / 2), tx = X(s0) + 10, ty = Z(-el - p.hd - LM) + 12;
+    s += `<g class="lbl"><polyline class="th" points="${lx},${ly} ${lx - 18},${ty - 4} ${tx + 210},${ty - 4}"/><text x="${tx + 205}" y="${ty}" text-anchor="end">lastro de concreto magro (${f0(LM)} cm)</text></g>`;
+    return svgWrap(W, H, s);
+  }
+
+  return { DEF, LM, derive, plan, cut, f0, dim, svgWrap, STYLE };
+})();
+if (typeof module !== 'undefined' && module.exports) module.exports = { AlasGeo };
+
+</script>
+<script>
+/* =====================================================================
+   Alas · Esforços: empuxo do solo e paredes engastadas na laje de fundo
+   Rankine, solo não coesivo, terreno horizontal em cada faixa, sem atrito
+   solo-parede. Valores característicos (sem majorar). Unidades kN e m;
+   a geometria chega em cm (AlasGeo).
+
+   - Testa: empuxo ativo em toda a altura, do fundo da laje sob a testa
+     (e_g) até o topo (H_t).
+   - Dente na ponta: empuxo passivo na altura da laje mais o dente
+     (e_l + h_d). O passivo deve equilibrar o ativo: E_p / E_a ≥ 1 por metro
+     (com as resultantes totais, testa × L_t e ponta × B_tot, só informativo).
+   - Paredes (testa e alas) engastadas na laje de fundo, em faixas
+     verticais de 1 m: o solo de cada faixa tem a altura da parede
+     acima da laje, que nas alas cai do topo da testa (H_t) até a ponta
+     (H_p). M = K_a γ h³ / 6 e V = K_a γ h² / 2 na base.
+   ===================================================================== */
+const AlasEsf = (function () {
+  const G = AlasGeo, f = G.f0;
+  const fx = (v, n = 2) => (Math.abs(v) < 0.5 * 10 ** -n ? 0 : v).toFixed(n).replace('.', ',');
+  const SDEF = { gs: 18, phi: 30, sadm: 100 };   // γ do solo (kN/m³), φ (graus), tensão admissível (kPa)
+  const GC = 25;                                  // peso específico do concreto armado (kN/m³)
+
+  // Peso próprio e tensão média no solo (medidas em cm -> m)
+  function weight(p) {
+    const d = G.derive(p), m = v => v / 100;
+    const Lt = m(d.Lt), Bt = m(d.Btot), et = m(p.et), La = m(p.La), Ls = m(d.Ls), el = m(p.el), eg = m(p.eg), bg = m(p.bg), hd = m(p.hd), bd = m(p.bd), ea = m(p.ea), Ht = m(p.Ht), Hp = m(p.Hp), D = m(p.D);
+    const ch = Math.max(0, eg - el);
+    const A = Lt * et + (Lt + Bt) / 2 * La;                            // área de apoio em planta (contorno externo)
+    const parts = [
+      ['Laje de fundo', A * el, `${fx(A, 2)} m² × ${G.f0(p.el)} cm`],
+      ['Engrossamento sob a testa', ch * (bg + ch / 2) * Lt, `faixa de ${G.f0(p.bg)} cm + chanfro, ao longo da testa`],
+      ['Dente na ponta', hd * bd * Bt, `${G.f0(p.hd)} × ${G.f0(p.bd)} cm, ao longo da ponta`],
+      ['Testa', Lt * et * Ht - Math.PI * D * D / 4 * et, `descontado o furo do tubo`],
+      ['Alas (duas)', 2 * ea * Ls * (Ht + Hp) / 2, `altura média ${G.f0((p.Ht + p.Hp) / 2)} cm`]
+    ].map(([nm, V, obs]) => ({ nm, V, W: GC * V, obs }));
+    const V = parts.reduce((a, x) => a + x.V, 0), W = GC * V;
+    return { A, parts, V, W, sigma: W / A };
+  }
+
+  function calc(p, s) {
+    const d = G.derive(p), r = Math.PI / 180;
+    const Ka = Math.tan((45 - s.phi / 2) * r) ** 2, Kp = Math.tan((45 + s.phi / 2) * r) ** 2;
+    const m = v => v / 100;
+    // empuxo ativo na testa (do fundo da laje até o topo)
+    const Ha = m(p.Ht + p.eg), pa = Ka * s.gs * Ha, Ea = pa * Ha / 2, EaT = Ea * m(d.Lt);
+    // empuxo passivo no dente (laje + dente)
+    const Hpp = m(p.el + p.hd), pp = Kp * s.gs * Hpp, Ep = pp * Hpp / 2, EpT = Ep * m(d.Btot);
+    const FS = Ep / Ea, FST = EpT / EaT;                     // por metro e com as larguras da testa e da ponta
+    // paredes engastadas na laje (faixa de 1 m)
+    const strip = h => ({ h, p: Ka * s.gs * h, M: Ka * s.gs * h ** 3 / 6, V: Ka * s.gs * h ** 2 / 2 });
+    const testa = strip(m(p.Ht));
+    const alaH = t => m(p.Ht + (p.Hp - p.Ht) * t);       // t = 0 junto à testa, 1 na ponta
+    const ala0 = strip(alaH(0)), ala1 = strip(alaH(1));
+    const wt = weight(p), soilOk = wt.sigma <= s.sadm;
+    return { wt, soilOk, sadm: s.sadm, d, Ka, Kp, Ha, pa, Ea, EaT, Hpp, pp, Ep, EpT, FS, FST, ok: FS >= 1 - 1e-9, testa, ala0, ala1, alaH, strip, yEa: Ha / 3, yEp: Hpp / 3 };
+  }
+
+  const STY = G.STYLE + `<style>
+    .pa{fill:var(--ativo-soft,#fde7d6);stroke:var(--ativo,#c2531b);stroke-width:1.2}
+    .pp{fill:var(--passivo-soft,#dbe9fb);stroke:var(--passivo,#2563b0);stroke-width:1.2}
+    .aa{stroke:var(--ativo,#c2531b);stroke-width:1}
+    .ap{stroke:var(--passivo,#2563b0);stroke-width:1}
+    .ta{font-size:12px;fill:var(--ativo,#c2531b);font-weight:600;paint-order:stroke;stroke:var(--fundo,#fff);stroke-width:4px}
+    .tp{font-size:12px;fill:var(--passivo,#2563b0);font-weight:600;paint-order:stroke;stroke:var(--fundo,#fff);stroke-width:4px}
+    .gr{stroke:var(--solo,#8b6a3e);stroke-width:1.4}
+    .grh{stroke:var(--solo,#8b6a3e);stroke-width:.9}
+    .eng{stroke:var(--linha,#1d2430);stroke-width:.8}
+    .mm{fill:var(--ativo-soft,#fde7d6);stroke:var(--ativo,#c2531b);stroke-width:1.4}
+    .vv{fill:var(--passivo-soft,#dbe9fb);stroke:var(--passivo,#2563b0);stroke-width:1.4}
+    .ax{stroke:var(--cota,#334155);stroke-width:.8}
+    .grid{stroke:var(--line,#d9dee5);stroke-width:.6}
+    .tt{font-size:12px;fill:var(--cota,#334155);paint-order:stroke;stroke:var(--fundo,#fff);stroke-width:4px}
+    .th2{font-size:12px;fill:var(--ink,#1d2430);font-weight:600}
+  </style>
+  <defs>
+    <marker id="arA" viewBox="0 0 8 8" refX="7.5" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="var(--ativo,#c2531b)"/></marker>
+    <marker id="arP" viewBox="0 0 8 8" refX="7.5" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path d="M0,0 L8,4 L0,8 Z" fill="var(--passivo,#2563b0)"/></marker>
+  </defs>`;
+
+  // terreno: linha com hachuras curtas
+  const ground = (x1, x2, y, dir = 1) => { let g = `<line class="gr" x1="${x1}" y1="${y}" x2="${x2}" y2="${y}"/>`; for (let x = Math.min(x1, x2) + 4; x < Math.max(x1, x2); x += 9) g += `<line class="grh" x1="${x}" y1="${y}" x2="${x - 6}" y2="${y + 6 * dir}"/>`; return g; };
+
+  /* ----- corte A com os empuxos ----- */
+  function cutLoads(p, R, W = 760, H = 430) {
+    const d = R.d, L = d.Ltot, et = p.et, el = p.el, eg = p.eg, bg = p.bg, ch = Math.max(0, eg - el);
+    const zTop = p.Ht, zBot = -(el + p.hd);
+    const kp = 120 / Math.max(R.pa, R.pp);                       // px por kPa nos diagramas
+    const padL = 175 + R.pa * kp, padR = 175 + R.pp * kp, padT = 34, padB = 46;
+    const k = Math.min((W - padL - padR) / L, (H - padT - padB) / (zTop - zBot));
+    const ox = padL + (W - padL - padR - L * k) / 2, oy = padT + (H - padT - padB - (zTop - zBot) * k) / 2 + zTop * k;
+    const X = x => ox + x * k, Z = z => oy - z * k;
+    const P = pts => pts.map(([x, z]) => `${X(x).toFixed(1)},${Z(z).toFixed(1)}`).join(' ');
+    let s = STY;
+    // vista da ala e concreto (sem o tubo: faixa da testa ao lado do tubo)
+    s += `<polygon class="cv" points="${P([[et, 0], [et, p.Ht], [L, p.Hp], [L, 0]])}"/>`;
+    s += `<polygon class="c" points="${P([[0, p.Ht], [et, p.Ht], [et, 0], [L, 0], [L, -el - p.hd], [L - p.bd, -el - p.hd], [L - p.bd, -el], [bg + ch, -el], [bg, -eg], [0, -eg]])}"/>`;
+    // terreno: a montante no topo da testa; a jusante no topo da laje
+    s += ground(X(0) - R.pa * kp - 150, X(0), Z(p.Ht));
+    s += ground(X(L), X(L) + R.pp * kp + 150, Z(0));
+    // diagrama ativo na face de montante (de z = H_t até o fundo da laje, −e_g)
+    const xa = X(0), za0 = Z(p.Ht), za1 = Z(-eg), wa = R.pa * kp;
+    s += `<polygon class="pa" points="${xa},${za0} ${xa - wa},${za1} ${xa},${za1}"/>`;
+    for (let i = 1; i <= 6; i++) { const t = i / 6, y = za0 + t * (za1 - za0), w = wa * t; if (w > 8) s += `<line class="aa" x1="${xa - w + 2}" y1="${y}" x2="${xa - 2}" y2="${y}" marker-end="url(#arA)"/>`; }
+    s += `<text class="ta" x="${xa - wa - 6}" y="${za1 + 4}" text-anchor="end">${fx(R.pa)} kPa</text>`;
+    // resultante ativa
+    const yEa = Z(-eg + R.yEa * 100);
+    s += `<line class="aa" x1="${xa - wa - 110}" y1="${yEa}" x2="${xa - 3}" y2="${yEa}" stroke-width="2.2" marker-end="url(#arA)"/>`;
+    s += `<text class="ta" x="${xa - wa - 12}" y="${yEa - 7}" text-anchor="end">E<tspan font-size="9" dy="3">a</tspan><tspan dy="-3"> = ${fx(R.Ea)} kN/m</tspan></text>`;
+    // diagrama passivo na face da ponta (do topo da laje ao pé do dente)
+    const xp = X(L), zp0 = Z(0), zp1 = Z(zBot), wp = R.pp * kp;
+    s += `<polygon class="pp" points="${xp},${zp0} ${xp + wp},${zp1} ${xp},${zp1}"/>`;
+    for (let i = 1; i <= 4; i++) { const t = i / 4, y = zp0 + t * (zp1 - zp0), w = wp * t; if (w > 8) s += `<line class="ap" x1="${xp + w - 2}" y1="${y}" x2="${xp + 2}" y2="${y}" marker-end="url(#arP)"/>`; }
+    s += `<text class="tp" x="${xp + wp + 6}" y="${zp1 + 4}">${fx(R.pp)} kPa</text>`;
+    const yEp = Z(zBot + R.yEp * 100);
+    s += `<line class="ap" x1="${xp + wp + 110}" y1="${yEp}" x2="${xp + 3}" y2="${yEp}" stroke-width="2.2" marker-end="url(#arP)"/>`;
+    s += `<text class="tp" x="${xp + wp + 12}" y="${yEp - 7}">E<tspan font-size="9" dy="3">p</tspan><tspan dy="-3"> = ${fx(R.Ep)} kN/m</tspan></text>`;
+    // alturas de solo
+    s += G.dim(X(0) - wa - 135, Z(p.Ht), X(0) - wa - 135, Z(-eg), 0, f(p.Ht + eg), { noExt: true });
+    s += G.dim(X(L) + wp + 135, Z(0), X(L) + wp + 135, Z(zBot), 0, f(el + p.hd), { noExt: true });
+    s += `<text class="tt" x="${X(0) - wa / 2 - 10}" y="${Z(p.Ht) - 10}" text-anchor="middle">solo ativo</text>`;
+    s += `<text class="tt" x="${X(L) + wp / 2 + 10}" y="${Z(0) - 10}" text-anchor="middle">solo passivo</text>`;
+    return G.svgWrap(W, H, s);
+  }
+
+  /* ----- ala desenvolvida: altura de solo, M e V na base ----- */
+  function wingChart(p, R, W = 760, H = 470) {
+    const d = R.d, Ls = d.Ls, padL = 80, padR = 40;
+    const kx = (W - padL - padR) / Ls, X = x => padL + x * kx;
+    const n = 40, ts = Array.from({ length: n + 1 }, (_, i) => i / n);
+    const S = ts.map(t => R.strip(R.alaH(t)));
+    let s = STY;
+    // painel 1: elevação da ala com a altura de solo
+    const h1 = 140, y1 = 30, kz = Math.min((h1 - 20) / p.Ht, kx);
+    const Zb = y1 + h1 - 8, Zw = z => Zb - z * kz;
+    s += `<text class="th2" x="${padL}" y="${y1 - 10}">Elevação da ala (face em contato com o solo)</text>`;
+    s += `<polygon class="cv" points="${X(0)},${Zb} ${X(0)},${Zw(p.Ht)} ${X(Ls)},${Zw(p.Hp)} ${X(Ls)},${Zb}"/>`;
+    for (let i = 1; i < 8; i++) { const x = Ls * i / 8, z = p.Ht + (p.Hp - p.Ht) * i / 8; s += `<line class="th" x1="${X(x)}" y1="${Zb}" x2="${X(x)}" y2="${Zw(z)}"/>`; }
+    // engaste na laje
+    s += `<line class="ln" x1="${X(0) - 6}" y1="${Zb}" x2="${X(Ls) + 6}" y2="${Zb}" stroke-width="1.6"/>`;
+    for (let x = X(0); x < X(Ls); x += 9) s += `<line class="eng" x1="${x}" y1="${Zb}" x2="${x - 6}" y2="${Zb + 7}"/>`;
+    s += `<text class="tt" x="${X(Ls / 2)}" y="${Zb + 22}" text-anchor="middle">engastada na laje de fundo</text>`;
+    s += `<text class="tt" x="${X(0) + 6}" y="${Zw(p.Ht) - 6}">junto à testa</text>`;
+    s += G.dim(X(0) - 40, Zw(p.Ht), X(0) - 40, Zb, 0, f(p.Ht), { noExt: true });
+    s += G.dim(X(Ls) + 22, Zw(p.Hp), X(Ls) + 22, Zb, 0, f(p.Hp), { noExt: true });
+    s += G.dim(X(0), Zb + 36, X(Ls), Zb + 36, 0, f(Ls) + ' (comprimento inclinado)', { noExt: true, tin: true });
+    // painéis 2 e 3: M e V na base, ao longo da ala
+    const plot = (top, hgt, key, cls, unit, title) => {
+      const vmax = S[0][key] || 1, ky = (hgt - 26) / vmax, base = top + 18, Y = v => base + v * ky;
+      let g = `<text class="th2" x="${padL}" y="${top}">${title}</text>`;
+      g += `<line class="ax" x1="${X(0)}" y1="${base}" x2="${X(Ls)}" y2="${base}"/>`;
+      [0.25, 0.5, 0.75, 1].forEach(t => { g += `<line class="grid" x1="${X(Ls * t)}" y1="${base}" x2="${X(Ls * t)}" y2="${base + hgt - 26}"/>`; });
+      g += `<polygon class="${cls}" points="${X(0)},${base} ${ts.map((t, i) => `${X(Ls * t).toFixed(1)},${Y(S[i][key]).toFixed(1)}`).join(' ')} ${X(Ls)},${base}"/>`;
+      g += `<text class="tt" x="${X(0) + 8}" y="${Y(S[0][key]) - 4}">${fx(S[0][key])} ${unit}</text>`;
+      g += `<text class="tt" x="${X(Ls) - 4}" y="${Y(S[n][key]) + 16}" text-anchor="end">${fx(S[n][key], 3)} ${unit}</text>`;
+      g += `<text class="tt" x="${X(0) - 8}" y="${base + 4}" text-anchor="end">0</text>`;
+      return g;
+    };
+    s += plot(y1 + h1 + 70, 110, 'M', 'mm', 'kN·m/m', 'Momento fletor na base da ala, M (por metro de ala)');
+    s += plot(y1 + h1 + 215, 100, 'V', 'vv', 'kN/m', 'Esforço cortante na base da ala, V (por metro de ala)');
+    // eixo s
+    const yb = y1 + h1 + 215 + 100;
+    s += `<text class="tt" x="${X(0)}" y="${yb + 14}" text-anchor="start">junto à testa</text><text class="tt" x="${X(Ls)}" y="${yb + 14}" text-anchor="end">ponta</text>`;
+    return G.svgWrap(W, Math.max(H, yb + 24), s);
+  }
+
+  return { SDEF, GC, calc, weight, cutLoads, wingChart, fx };
+})();
+if (typeof module !== 'undefined' && module.exports) module.exports = { AlasEsf };
+
+</script>
+<script>
+/* =====================================================================
+   Alas · Armaduras (NBR 6118)
+   Armadura padrão por elemento, a mesma nas duas faces e nas duas
+   direções (vertical e horizontal, ou longitudinal e transversal):
+     - laje de fundo (vale também para o dente)
+     - testa
+     - paredes (alas)
+   Verificações por faixa de 1 m: flexão simples (CA-50, γc = 1,4,
+   γs = 1,15, γf = 1,4), armadura mínima por face, espaçamento máximo,
+   bitola máxima e cortante sem estribos (V_Rd1).
+   Esforços característicos da aba Esforços. A laje de fundo recebe no
+   engaste o maior momento das paredes que nascem nela.
+   Unidades: cm, kN, MPa (indicado em cada conta).
+   ===================================================================== */
+const AlasArm = (function () {
+  const G = AlasGeo, fx = AlasEsf.fx, f = G.f0;
+  const BITOLAS = [5, 6.3, 8, 10, 12.5, 16, 20];
+  const CAA = {
+    I: { nome: 'I · fraca (rural, submersa)', fck: 20, cob: 3.0 },
+    II: { nome: 'II · moderada (urbana)', fck: 25, cob: 3.0 },
+    III: { nome: 'III · forte (marinha, industrial)', fck: 30, cob: 4.0 },
+    IV: { nome: 'IV · muito forte (respingos de maré, industrial)', fck: 40, cob: 5.0 }
+  };
+  const ELEM = [
+    ['lf', 'Laje de fundo', 'vale também para o dente'],
+    ['te', 'Testa', ''],
+    ['pa', 'Paredes (alas)', '']
+  ];
+  const DEF = { fck: 25, caa: 'II', cob: 3.0, lf_phi: 8, lf_s: 20, te_phi: 8, te_s: 20, pa_phi: 8, pa_s: 20 };
+  // NBR 6118, Tabela 17.3 (seção retangular, CA-50)
+  const rhoMin = fck => fck <= 30 ? 0.150 : fck <= 35 ? 0.164 : fck <= 40 ? 0.179 : fck <= 45 ? 0.194 : 0.208;
+  const asBar = phi => Math.PI * (phi / 10) ** 2 / 4;           // cm²
+
+  // Flexão simples, b = 100 cm: Md (kN·cm/m), d (cm), fck (MPa) -> As (cm²/m), x/d
+  function flex(MdkNm, d, fck) {
+    const fcd = fck / 10 / 1.4, fyd = 50 / 1.15, b = 100, Md = MdkNm * 100;
+    if (Md <= 0) return { As: 0, xd: 0, ok: true };
+    const r = 1 - Md / (0.425 * b * d * d * fcd);
+    if (r < 0) return { As: NaN, xd: Infinity, ok: false };
+    const x = 1.25 * d * (1 - Math.sqrt(r));
+    return { As: Md / (fyd * (d - 0.4 * x)), xd: x / d, ok: x / d <= 0.45 };
+  }
+  // Cortante sem estribos, NBR 6118 19.4.1: V_Rd1 (kN/m)
+  function vrd1(As, d, fck) {
+    const fctd = 0.7 * 0.3 * fck ** (2 / 3) / 1.4, tau = 0.25 * fctd;            // MPa
+    const k = Math.max(1, 1.6 - d / 100), rho = Math.min(0.02, As / (100 * d));
+    return tau * k * (1.2 + 40 * rho) * (d / 100) * 1000;                       // MN/m -> kN/m
+  }
+
+  function check(p, R, a) {
+    const P = { fck: a.fck, caa: CAA[a.caa], cob: a.cob };
+    const warn = [];
+    if (a.fck < P.caa.fck) warn.push(`Para a classe ${a.caa}, a NBR 6118 pede f<sub>ck</sub> ≥ ${P.caa.fck} MPa (Tabela 7.1).`);
+    if (a.cob < P.caa.cob) warn.push(`Para elementos em contato com o solo na classe ${a.caa}, o cobrimento nominal mínimo é ${f(P.caa.cob)} cm (Tabela 7.2).`);
+    const Mw = Math.max(R.testa.M, R.ala0.M), Vw = 0;
+    const src = {
+      lf: { h: p.el, Mk: Mw, Vk: null, orig: 'engaste das paredes na laje' },
+      te: { h: p.et, Mk: R.testa.M, Vk: R.testa.V, orig: 'base da testa' },
+      pa: { h: p.ea, Mk: R.ala0.M, Vk: R.ala0.V, orig: 'base da ala, junto à testa' }
+    };
+    const rows = ELEM.map(([k, nome, obs]) => {
+      const phi = a[k + '_phi'], s = a[k + '_s'], e = src[k], h = e.h;
+      const d = h - a.cob - phi / 20;                                   // camada externa
+      const Asef = asBar(phi) * 100 / s, Md = 1.4 * e.Mk, fl = flex(Md, d, a.fck);
+      const Asmin = rhoMin(a.fck) / 100 * 100 * h;
+      const sMax = Math.min(2 * h, 20), phiMax = h * 10 / 8;
+      const Vd = e.Vk == null ? null : 1.4 * e.Vk, VR = vrd1(Asef, d, a.fck);
+      const it = {
+        flex: fl.ok && Asef >= fl.As - 1e-9,
+        min: Asef >= Asmin - 1e-9,
+        esp: s <= sMax + 1e-9,
+        bit: phi <= phiMax + 1e-9,
+        cort: Vd == null ? true : Vd <= VR,
+        d: d > 0
+      };
+      const ok = Object.values(it).every(Boolean);
+      return { k, nome, obs, phi, s, h, d, Mk: e.Mk, Md, As: fl.As, xd: fl.xd, xdOk: fl.ok, Asmin, Asef, sMax, phiMax, Vk: e.Vk, Vd, VR, it, ok, orig: e.orig, asReq: Math.max(fl.As || 0, Asmin) };
+    });
+    return { rows, warn, rhoMin: rhoMin(a.fck), ok: rows.every(r => r.ok) };
+  }
+
+  /* ----- posições das barras (N1 a N4) -----
+     Cada posição é uma barra em colchete: dobra + reto + dobra. A dobra é a espessura do
+     elemento menos os dois cobrimentos. A segunda barra é a mesma, espelhada na face oposta;
+     as duas juntas fecham o estribo.
+       N1 testa: vertical, do topo até o fundo do engrossamento
+       N2 laje de fundo: horizontal, de ponta a ponta
+       N3 dente: vertical, do topo da laje ao pé do dente
+       N4 paredes: vertical, da base da laje ao topo da ala (reto variável)
+     Medidas pelas faces externas das barras, sem ganchos nem traspasse. */
+  function bars(p, a) {
+    const d = G.derive(p), c = a.cob;
+    const mk = (n, el, k, dob, reto, form, reto1) => ({ n, el, k, dob, reto, reto1, L: 2 * dob + reto, Lmin: reto1 == null ? null : 2 * dob + reto1, form });
+    return [
+      mk('N1', 'Testa', 'te', p.et - 2 * c, p.Ht + p.eg - 2 * c, 'vertical, nas duas faces da testa; fecha no topo e no fundo do engrossamento'),
+      mk('N2', 'Laje de fundo', 'lf', p.el - 2 * c, d.Ltot - 2 * c, 'horizontal, faces superior e inferior; fecha nas duas extremidades da laje'),
+      mk('N3', 'Dente', 'lf', p.bd - 2 * c, p.hd + p.el - 2 * c, 'vertical, nas duas faces do dente; fecha no pé do dente e no topo da laje'),
+      mk('N4', 'Paredes (alas)', 'pa', p.ea - 2 * c, p.Ht + p.el - 2 * c, 'vertical, nas duas faces da ala; o reto varia ao longo da ala', p.Hp + p.el - 2 * c)
+    ];
+  }
+
+  /* ----- corte A com os estribos e o detalhe de cada posição ----- */
+  function cutBars(p, A, a, W = 1160, H = 640) {
+    const d = G.derive(p), c = a.cob, L = d.Ltot, et = p.et, el = p.el, eg = p.eg, bg = p.bg, ch = Math.max(0, eg - el), bd = p.bd, hd = p.hd;
+    const rw = key => A.rows.find(x => x.k === key), lab = key => `ø${f(rw(key).phi)} c/${f(rw(key).s)}`;
+    const POS = bars(p, a);
+    const padL = 330, padR = 330, padT = 40, padB = 210, zTop = p.Ht, zBot = -(el + hd);
+    const k = Math.min((W - padL - padR) / L, (H - padT - padB) / (zTop - zBot));
+    const ox = padL + (W - padL - padR - L * k) / 2, oy = padT + zTop * k + 10;
+    const X = x => ox + x * k, Z = z => oy - z * k;
+    const P = pts => pts.map(([x, z]) => `${X(x).toFixed(1)},${Z(z).toFixed(1)}`).join(' ');
+    let s = G.STYLE + `<style>
+      .A{fill:none;stroke:var(--aco,#b42318);stroke-width:2.2;stroke-linejoin:round}
+      .B{fill:none;stroke:var(--aco-b,#e0662f);stroke-width:2.2;stroke-linejoin:round;stroke-dasharray:7 3}
+      .A2{fill:none;stroke:var(--aco2,#2563b0);stroke-width:2.2;stroke-linejoin:round}
+      .B2{fill:none;stroke:var(--aco2-b,#5b8fd6);stroke-width:2.2;stroke-linejoin:round;stroke-dasharray:7 3}
+      .tg{font:700 12px var(--mono,monospace);paint-order:stroke;stroke:var(--fundo,#fff);stroke-width:4px}
+      .ml{font:12px var(--mono,monospace);fill:var(--cota,#334155);paint-order:stroke;stroke:var(--fundo,#fff);stroke-width:4px}
+      .ti{font-size:12.5px;font-weight:600;fill:var(--ink,#1d2430)}
+      .su{font-size:11.5px;fill:var(--muted,#5b6676)}
+    </style>`;
+    s += `<polygon class="cv" points="${P([[et, 0], [et, p.Ht], [L, p.Hp], [L, 0]])}"/>`;
+    s += `<polygon class="c" points="${P([[0, p.Ht], [et, p.Ht], [et, 0], [L, 0], [L, -el - hd], [L - bd, -el - hd], [L - bd, -el], [bg + ch, -el], [bg, -eg], [0, -eg]])}"/>`;
+    const o = 1.4;   // afastamento só de desenho entre a barra e a espelhada
+    const vBr = (x, x2, z1, z2, cls) => `<polyline class="${cls}" points="${P([[x2, z2], [x, z2], [x, z1], [x2, z1]])}"/>`;
+    const hBr = (z, z2, x1, x2, cls) => `<polyline class="${cls}" points="${P([[x1, z2], [x1, z], [x2, z], [x2, z2]])}"/>`;
+    s += vBr(c, et - c, -eg + c, p.Ht - c, 'A') + vBr(et - c, c + o, -eg + c + o, p.Ht - c - o, 'B');
+    s += hBr(-c, -el + c, c, L - c, 'A') + hBr(-el + c, -c - o, c + o, L - c - o, 'B');
+    s += vBr(L - bd + c, L - c, -el - hd + c, -c, 'A') + vBr(L - c, L - bd + c + o, -el - hd + c + o, -c - o, 'B');
+    const s4 = et + 24, b4 = Math.max(p.ea - 2 * c, 3), zt4 = p.Ht + (p.Hp - p.Ht) * ((s4 + b4 - et) / (L - et)) - c;
+    s += vBr(s4, s4 + b4, -el + c, zt4, 'A2') + vBr(s4 + b4, s4 + o, -el + c + o, zt4 - o, 'B2');
+    const tg = (x, y, t, col) => `<text class="tg" x="${x}" y="${y}" text-anchor="middle" fill="var(--${col})">${t}</text>`;
+    s += tg(X(et / 2), Z(p.Ht) - 8, 'N1', 'aco') + tg(X(L * 0.5), Z(-c) - 8, 'N2', 'aco') + tg(X(L - bd / 2), Z(-el - hd) + 18, 'N3', 'aco') + tg(X(s4 + b4 / 2), Z(zt4) - 8, 'N4', 'aco2');
+    s += `<text class="su" x="${X(et + 4)}" y="${Z(p.Ht) - 26}">vista da ala</text>`;
+    // ---- detalhe: as duas barras de cada posição, lado a lado
+    const kd = Math.min(1.25, 230 / Math.max(POS[0].reto, POS[3].reto), 420 / POS[1].reto);
+    const piece = (x0, y0, reto, dob, vertical, mirror, cls) => {
+      const sg = mirror ? -1 : 1;
+      const pts = vertical ? [[x0 + sg * dob * kd, y0], [x0, y0], [x0, y0 + reto * kd], [x0 + sg * dob * kd, y0 + reto * kd]]
+                           : [[x0, y0 + sg * dob * kd], [x0, y0], [x0 + reto * kd, y0], [x0 + reto * kd, y0 + sg * dob * kd]];
+      return `<polyline class="${cls}" points="${pts.map(q => q.map(v => v.toFixed(1)).join(',')).join(' ')}"/>`;
+    };
+    const ml = (x, y, t, an = 'middle') => `<text class="ml" x="${x}" y="${y}" text-anchor="${an}">${t}</text>`;
+    const R0 = v => f(Math.round(v));
+    const title = (x, y, q, col) => `<text class="ti" x="${x}" y="${y}"><tspan fill="var(--${col})" font-family="var(--mono,monospace)">${q.n}</tspan> ${q.el} ${lab(q.k)} · 2 barras</text>`;
+    const vpair = (q, x0, y0, A1, B1, col, txt) => {
+      const h = q.reto * kd, w = q.dob * kd;
+      let g = piece(x0, y0, q.reto, q.dob, true, false, A1) + piece(x0 + 120, y0, q.reto, q.dob, true, true, B1);
+      g += ml(x0 + w / 2, y0 - 7, R0(q.dob)) + ml(x0 + w / 2, y0 + h + 17, R0(q.dob)) + ml(x0 + 120 - w / 2, y0 - 7, R0(q.dob)) + ml(x0 + 120 - w / 2, y0 + h + 17, R0(q.dob));
+      g += ml(x0 + 60, y0 + h / 2 + 4, txt);
+      return g + title(x0 - 30, y0 - 28, q, col);
+    };
+    s += vpair(POS[0], 120, Z(p.Ht - c) - 10, 'A', 'B', 'aco', R0(POS[0].reto));
+    s += vpair(POS[3], W - 250, Z(p.Ht - c) - 10, 'A2', 'B2', 'aco2', R0(POS[3].reto) + ' a ' + R0(POS[3].reto1));
+    s += vpair(POS[2], W - 250, Math.max(Z(-c) + 30, Z(p.Ht - c) + POS[3].reto * kd + 80), 'A', 'B', 'aco', R0(POS[2].reto));
+    { const q = POS[1], w = q.reto * kd, h = q.dob * kd, x0 = X(L / 2) - w / 2, y0 = Z(zBot) + 70;
+      s += piece(x0, y0, q.reto, q.dob, false, false, 'A') + piece(x0, y0 + 70, q.reto, q.dob, false, true, 'B');
+      s += ml(x0 + w / 2, y0 - 7, R0(q.reto)) + ml(x0 - 8, y0 + h / 2 + 4, R0(q.dob), 'end') + ml(x0 + w + 8, y0 + h / 2 + 4, R0(q.dob), 'start');
+      s += ml(x0 + w / 2, y0 + 70 + 17, R0(q.reto)) + ml(x0 - 8, y0 + 70 - h / 2 + 4, R0(q.dob), 'end') + ml(x0 + w + 8, y0 + 70 - h / 2 + 4, R0(q.dob), 'start');
+      s += title(Math.max(10, x0 - 250), y0 + 40, q, 'aco'); }
+    return G.svgWrap(W, H, s);
+  }
+
+  return { DEF, CAA, BITOLAS, ELEM, check, bars, cutBars, flex, vrd1, rhoMin, asBar };
+})();
+if (typeof module !== 'undefined' && module.exports) module.exports = { AlasArm };
+
+</script>
+<script>
+/* =====================================================================
+   Alas · Memorial de cálculo
+   Monta o memorial em HTML a partir do estado do app (geometria, solo,
+   esforços, tensão no solo, dimensionamento e armaduras adotadas).
+   O mesmo HTML serve para a aba Memorial, para copiar para o Word e
+   para o arquivo .doc.
+   ===================================================================== */
+const AlasMem = (function () {
+  const G = AlasGeo, E = AlasEsf, AR = AlasArm, f = G.f0, fx = E.fx;
+  const x2 = v => fx(v, 2), R0 = v => f(Math.round(v));
+  const esc = t => String(t == null ? '' : t).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const tbl = (head, rows, cls = '') => `<table class="mt ${cls}"><thead><tr>${head.map((h, i) => `<th${i ? '' : ' class="l"'}>${h}</th>`).join('')}</tr></thead><tbody>${rows.map(r => `<tr>${r.map((c, i) => `<td${i ? '' : ' class="l"'}>${c}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+  const tblL = (head, rows) => `<table class="mt"><thead><tr>${head.map(h => `<th class="l">${h}</th>`).join('')}</tr></thead><tbody>${rows.map(r => `<tr>${r.map(c => `<td class="l">${c}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+  const st = ok => `<b class="${ok ? 'mok' : 'mno'}">${ok ? 'atende' : 'não atende'}</b>`;
+  const eq = t => `<p class="eq">${t}</p>`;
+
+  function build(ctx) {
+    const { p, soil, R, a, A, info } = ctx, d = R.d, wt = R.wt, B = AR.bars(p, a), caa = AR.CAA[a.caa];
+    const rw = k => A.rows.find(x => x.k === k);
+    const today = new Date().toLocaleDateString('pt-BR');
+    let h = '';
+    h += `<div class="mh"><div class="mh-t">Memorial de cálculo</div><div class="mh-s">Alas de bueiro em concreto armado</div>
+      <table class="mi"><tr><td>Obra</td><td>${esc(info.obra) || '—'}</td></tr><tr><td>Local</td><td>${esc(info.local) || '—'}</td></tr><tr><td>Responsável técnico</td><td>${esc(info.resp) || '—'}</td></tr><tr><td>Data</td><td>${today}</td></tr></table></div>`;
+
+    // 1
+    h += `<h2>1. Objeto e premissas</h2>
+      <p>Este memorial apresenta a verificação da testa, das alas, da laje de fundo e do dente de um bueiro com tubo de diâmetro externo ${f(p.D)} cm, em concreto armado.</p>
+      <ul>
+        <li>Empuxo do solo pela teoria de Rankine, solo não coesivo, sem atrito solo-parede e sem sobrecarga no aterro.</li>
+        <li>Empuxo ativo na testa em toda a altura, do fundo da laje sob a testa até o topo; empuxo passivo no dente, na altura da laje mais o dente.</li>
+        <li>Testa e alas engastadas na laje de fundo, calculadas em faixas verticais de 1 m com a altura de solo de cada faixa; o aterro acompanha o topo inclinado das alas.</li>
+        <li>Tensão no solo pelo peso próprio da estrutura dividido pela área de apoio, com concreto armado a ${E.GC} kN/m³.</li>
+        <li>Dimensionamento pela ABNT NBR 6118, em faixas de 1 m, com γ<sub>f</sub> = 1,4, γ<sub>c</sub> = 1,4 e γ<sub>s</sub> = 1,15.</li>
+      </ul>`;
+
+    // 2
+    h += `<h2>2. Geometria</h2><p>Planta e corte A pelo eixo do tubo, com as medidas em centímetros. Lastro de concreto magro de ${f(G.LM)} cm sob a laje de fundo.</p>
+      <div class="mfig" data-w="760" data-h="470">${G.plan(p, 760, 470)}</div><p class="mcap">Figura 1 · Planta (medidas em cm)</p>
+      <div class="mfig" data-w="760" data-h="430">${G.cut(p, 760, 430)}</div><p class="mcap">Figura 2 · Corte A (medidas em cm)</p>`;
+
+    // 3
+    h += `<h2>3. Solo</h2>` + tbl(['Parâmetro', 'Valor'], [
+      ['Peso específico, γ', f(soil.gs) + ' kN/m³'], ['Ângulo de atrito, φ', f(soil.phi) + '°'], ['Tensão admissível, σ<sub>adm</sub>', f(soil.sadm) + ' kPa'],
+      ['Coeficiente de empuxo ativo, K<sub>a</sub> = tg²(45° − φ/2)', fx(R.Ka, 4)], ['Coeficiente de empuxo passivo, K<sub>p</sub> = tg²(45° + φ/2)', fx(R.Kp, 4)]
+    ]);
+
+    // 4
+    const Ha = R.Ha, Hp = R.Hpp;
+    h += `<h2>4. Esforços</h2>
+      <h3>4.1 Empuxo ativo na testa</h3><p>Altura de solo do fundo da laje sob a testa até o topo: H = H<sub>t</sub> + e<sub>g</sub> = ${f(p.Ht)} + ${f(p.eg)} = ${f(p.Ht + p.eg)} cm.</p>
+      ${eq(`p<sub>a</sub> = K<sub>a</sub> · γ · H = ${fx(R.Ka, 4)} × ${f(soil.gs)} × ${fx(Ha, 2)} = <b>${x2(R.pa)} kPa</b>`)}
+      ${eq(`E<sub>a</sub> = p<sub>a</sub> · H / 2 = ${x2(R.pa)} × ${fx(Ha, 2)} / 2 = <b>${x2(R.Ea)} kN/m</b>, aplicado a H/3 = ${fx(Ha / 3 * 100, 1)} cm do fundo`)}
+      <p>Na largura da testa (${f(d.Lt)} cm), a resultante é ${x2(R.EaT)} kN.</p>
+      <h3>4.2 Empuxo passivo no dente</h3><p>Altura de solo da laje mais o dente: H = e<sub>l</sub> + h<sub>d</sub> = ${f(p.el)} + ${f(p.hd)} = ${f(p.el + p.hd)} cm.</p>
+      ${eq(`p<sub>p</sub> = K<sub>p</sub> · γ · H = ${fx(R.Kp, 4)} × ${f(soil.gs)} × ${fx(Hp, 2)} = <b>${x2(R.pp)} kPa</b>`)}
+      ${eq(`E<sub>p</sub> = p<sub>p</sub> · H / 2 = ${x2(R.pp)} × ${fx(Hp, 2)} / 2 = <b>${x2(R.Ep)} kN/m</b>`)}
+      <p>Na largura da ponta (${f(d.Btot)} cm), a resultante é ${x2(R.EpT)} kN.</p>
+      <h3>4.3 Equilíbrio dos empuxos</h3>
+      ${eq(`E<sub>p</sub> / E<sub>a</sub> = ${x2(R.Ep)} / ${x2(R.Ea)} = <b>${x2(R.FS)}</b> ${R.ok ? '≥' : '<'} 1,00 → ${st(R.ok)}`)}
+      <p>${R.ok ? 'O empuxo passivo no dente equilibra o empuxo ativo na testa.' : 'O empuxo passivo no dente não equilibra o ativo: é preciso aprofundar o dente.'}</p>
+      <h3>4.4 Paredes engastadas na laje de fundo</h3>
+      <p>Faixa vertical de 1 m com a altura de solo da própria parede acima da laje. Na base: M = K<sub>a</sub> · γ · h³ / 6 e V = K<sub>a</sub> · γ · h² / 2 (valores característicos).</p>` +
+      tbl(['Parede', 'h (cm)', 'Pressão na base (kPa)', 'M<sub>k</sub> (kN·m/m)', 'V<sub>k</sub> (kN/m)'], [['Testa', R.testa], ['Ala, junto à testa', R.ala0], ['Ala, na ponta', R.ala1]].map(([n, x]) => [n, f(Math.round(x.h * 1000) / 10), x2(x.p), x2(x.M), x2(x.V)]));
+    h += `<h3>4.5 Tensão no solo</h3>` + tblL(['Parte', 'Base do volume', 'Volume (m³)', 'Peso (kN)'], wt.parts.map(x => [x.nm, x.obs, fx(x.V, 3), x2(x.W)]).concat([['<b>Total</b>', '', `<b>${fx(wt.V, 3)}</b>`, `<b>${x2(wt.W)}</b>`]])) +
+      `<p>Área de apoio (contorno externo da laje em planta): A = ${x2(wt.A)} m².</p>
+      ${eq(`σ = P / A = ${x2(wt.W)} / ${x2(wt.A)} = <b>${x2(wt.sigma)} kPa</b> (${fx(wt.sigma / 98.0665, 2)} kgf/cm²) ${R.soilOk ? '≤' : '>'} σ<sub>adm</sub> = ${f(soil.sadm)} kPa → ${st(R.soilOk)}`)}`;
+
+    // 5
+    const fcd = a.fck / 1.4, fyd = 500 / 1.15;
+    h += `<h2>5. Dimensionamento das armaduras</h2><h3>5.1 Materiais e ambiente</h3>` + tbl(['Item', 'Valor'], [
+      ['Concreto', `C${a.fck}: f<sub>ck</sub> = ${a.fck} MPa, f<sub>cd</sub> = ${x2(fcd)} MPa`], ['Aço', `CA-50: f<sub>yd</sub> = ${x2(fyd)} MPa`],
+      ['Classe de agressividade ambiental', caa.nome], ['Cobrimento nominal adotado', f(a.cob) + ' cm'],
+      ['Cobrimento mínimo (contato com o solo, Tabela 7.2)', f(caa.cob) + ' cm'], ['f<sub>ck</sub> mínimo para a classe (Tabela 7.1)', 'C' + caa.fck]
+    ]);
+    h += `<h3>5.2 Flexão e armadura mínima</h3><p>Faixa de b = 100 cm, altura h igual à espessura do elemento, d = h − c − ø/2. M<sub>d</sub> = 1,4 · M<sub>k</sub>. Armadura mínima por face A<sub>s,mín</sub> = ρ<sub>mín</sub> · b · h, com ρ<sub>mín</sub> = ${fx(A.rhoMin, 3)} % (Tabela 17.3). A laje de fundo recebe no engaste o maior momento das paredes.</p>` +
+      tbl(['Elemento', 'Armadura', 'h (cm)', 'd (cm)', 'M<sub>k</sub> (kN·m/m)', 'M<sub>d</sub> (kN·m/m)', 'x/d', 'A<sub>s,nec</sub> (cm²/m)', 'A<sub>s,mín</sub> (cm²/m)', 'A<sub>s,ef</sub> (cm²/m)', 'Situação'],
+        A.rows.map(r => [r.nome, `ø${f(r.phi)} c/${f(r.s)}`, f(r.h), x2(r.d), x2(r.Mk), x2(r.Md), isFinite(r.xd) ? fx(r.xd, 3) : '—', isFinite(r.As) ? x2(r.As) : '—', x2(r.Asmin), `<b>${x2(r.Asef)}</b>`, st(r.it.flex && r.it.min)]), 'sm');
+    h += `<h3>5.3 Cortante</h3><p>Verificação sem armadura transversal: V<sub>Sd</sub> = 1,4 · V<sub>k</sub> ≤ V<sub>Rd1</sub> (item 19.4.1). Na laje de fundo, o cortante não foi calculado nesta versão.</p>` +
+      tbl(['Elemento', 'd (cm)', 'ρ<sub>1</sub> (%)', 'V<sub>k</sub> (kN/m)', 'V<sub>Sd</sub> (kN/m)', 'V<sub>Rd1</sub> (kN/m)', 'Situação'],
+        A.rows.filter(r => r.Vd != null).map(r => [r.nome, x2(r.d), fx(Math.min(2, r.Asef / r.d), 3), x2(r.Vk), x2(r.Vd), x2(r.VR), st(r.it.cort)]), 'sm');
+
+    // 7
+    const checks = [
+      ['Equilíbrio dos empuxos, E<sub>p</sub> / E<sub>a</sub> ≥ 1', `${x2(R.FS)}`, R.ok],
+      ['Tensão no solo, σ ≤ σ<sub>adm</sub>', `${x2(wt.sigma)} ≤ ${f(soil.sadm)} kPa`, R.soilOk]
+    ].concat(A.rows.map(r => [`${r.nome}: flexão, armadura mínima, cortante e detalhamento`, `ø${f(r.phi)} c/${f(r.s)}`, r.ok]));
+    h += `<h2>6. Resumo das verificações</h2>` + tbl(['Verificação', 'Valor', 'Situação'], checks.map(([n, v, ok]) => [n, v, st(ok)]));
+    if (A.warn.length) h += `<p class="mw">${A.warn.join('<br>')}</p>`;
+    h += `<p class="mf">Cálculo preliminar: valide coeficientes e hipóteses antes de uso em projeto executivo. Gerado pelo Alas v1.6 em ${today}.</p>`;
+    return h;
+  }
+
+  // CSS do documento (para a aba e para o Word)
+  const CSS = `
+    .mdoc{font-family:Calibri,'IBM Plex Sans',Arial,sans-serif;font-size:11pt;line-height:1.4;color:#1b1f24}
+    .mdoc h2{font-size:13pt;margin:18pt 0 6pt;color:#1f4e46;border-bottom:1px solid #c9d6d2;padding-bottom:2pt}
+    .mdoc h3{font-size:11pt;margin:10pt 0 4pt;color:#1b1f24}
+    .mdoc p{margin:4pt 0}
+    .mdoc ul{margin:4pt 0 4pt 18pt;padding:0}
+    .mdoc .eq{margin:4pt 0 4pt 14pt;font-family:Cambria,'IBM Plex Serif',Georgia,serif}
+    .mdoc table.mt{border-collapse:collapse;margin:4pt 0 8pt;width:100%}
+    .mdoc table.mt th,.mdoc table.mt td{border:1px solid #b9c3c0;padding:3pt 6pt;text-align:right;font-size:10pt;vertical-align:top}
+    .mdoc table.mt th{background:#e6efec;font-weight:bold}
+    .mdoc table.mt .l{text-align:left}
+    .mdoc table.sm th,.mdoc table.sm td{font-size:9pt;padding:2pt 4pt}
+    .mdoc .mok{color:#1f7a4d}.mdoc .mno{color:#b42318}
+    .mdoc .mh{border-bottom:2px solid #1f4e46;padding-bottom:8pt;margin-bottom:6pt}
+    .mdoc .mh-t{font-size:18pt;font-weight:bold;color:#1f4e46}
+    .mdoc .mh-s{font-size:12pt;margin-bottom:6pt}
+    .mdoc td,.mdoc th,.mdoc li{color:#1b1f24}
+    .mdoc table.mi td{padding:1pt 10pt 1pt 0;font-size:10pt}
+    .mdoc table.mi td:first-child{color:#5b6676}
+    .mdoc td .mok,.mdoc .mok{color:#1f7a4d}.mdoc td .mno,.mdoc .mno{color:#b42318}
+    .mdoc .mw{color:#9a5b00}
+    .mdoc .mf{margin-top:14pt;font-size:9pt;color:#5b6676}
+    .mdoc .mfig{margin:8pt 0 2pt;text-align:center}
+    .mdoc .mfig svg{width:100%;height:auto;max-width:640px}
+    .mdoc .mcap{text-align:center;font-size:9.5pt;color:#5b6676;margin:0 0 10pt}`;
+
+  // arquivo .doc (HTML que o Word abre)
+  function wordFile(inner) {
+    return `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40"><head><meta charset="utf-8"><title>Memorial de cálculo - Alas</title>
+      <!--[if gte mso 9]><xml><w:WordDocument><w:View>Print</w:View><w:Zoom>100</w:Zoom></w:WordDocument></xml><![endif]-->
+      <style>@page{size:21cm 29.7cm;margin:2cm 2cm 2cm 2.5cm}${CSS}</style></head><body><div class="mdoc">${inner}</div></body></html>`;
+  }
+
+  /* ----- figuras: SVG -> PNG (para o Word) ----- */
+  function svgToPng(svgEl, W, H, scale = 2) {
+    return new Promise((res, rej) => {
+      const src = new XMLSerializer().serializeToString(svgEl).replace('width="100%" height="100%"', `width="${W}" height="${H}"`);
+      const img = new Image();
+      img.onload = () => {
+        const cv = document.createElement('canvas'); cv.width = W * scale; cv.height = H * scale;
+        const cx = cv.getContext('2d'); cx.fillStyle = '#ffffff'; cx.fillRect(0, 0, cv.width, cv.height); cx.drawImage(img, 0, 0, cv.width, cv.height);
+        const url = cv.toDataURL('image/png'), bin = atob(url.split(',')[1]), u8 = new Uint8Array(bin.length);
+        for (let i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
+        res({ url, bytes: u8, w: W, h: H });
+      };
+      img.onerror = () => rej(new Error('falha ao gerar a imagem'));
+      img.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(src);
+    });
+  }
+  async function figures(root) {
+    const figs = [...root.querySelectorAll('.mfig')];
+    return Promise.all(figs.map(fg => svgToPng(fg.querySelector('svg'), +fg.dataset.w, +fg.dataset.h)));
+  }
+  // HTML para colar no Word: figuras como PNG
+  async function clipHtml(root) {
+    const pngs = await figures(root), clone = root.cloneNode(true);
+    [...clone.querySelectorAll('.mfig')].forEach((fg, i) => { fg.innerHTML = `<img src="${pngs[i].url}" width="600" alt="Figura ${i + 1}">`; });
+    return wordFile(clone.innerHTML);
+  }
+
+  /* ----- .docx a partir do memorial na tela (sem bibliotecas) ----- */
+  const CRC = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+  const crc32 = u8 => { let c = 0xFFFFFFFF; for (let i = 0; i < u8.length; i++) c = CRC[(c ^ u8[i]) & 255] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; };
+  function zip(files) {                                   // ZIP sem compressão (store)
+    const enc = new TextEncoder(), parts = [], cen = []; let off = 0;
+    files.forEach(([name, text]) => {
+      const nb = enc.encode(name), data = typeof text === 'string' ? enc.encode(text) : text, crc = crc32(data);
+      const h = new DataView(new ArrayBuffer(30));
+      h.setUint32(0, 0x04034b50, true); h.setUint16(4, 20, true); h.setUint16(8, 0, true); h.setUint32(14, crc, true); h.setUint32(18, data.length, true); h.setUint32(22, data.length, true); h.setUint16(26, nb.length, true);
+      parts.push(new Uint8Array(h.buffer), nb, data);
+      const c = new DataView(new ArrayBuffer(46));
+      c.setUint32(0, 0x02014b50, true); c.setUint16(4, 20, true); c.setUint16(6, 20, true); c.setUint32(16, crc, true); c.setUint32(20, data.length, true); c.setUint32(24, data.length, true); c.setUint16(28, nb.length, true); c.setUint32(42, off, true);
+      cen.push(new Uint8Array(c.buffer), nb);
+      off += 30 + nb.length + data.length;
+    });
+    const csize = cen.reduce((a, x) => a + x.length, 0), e = new DataView(new ArrayBuffer(22));
+    e.setUint32(0, 0x06054b50, true); e.setUint16(8, files.length, true); e.setUint16(10, files.length, true); e.setUint32(12, csize, true); e.setUint32(16, off, true);
+    return new Blob(parts.concat(cen, [new Uint8Array(e.buffer)]), { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+  }
+  const xe = t => t.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  // runs a partir dos nós inline (negrito, sub/sobrescrito, cor de situação)
+  function runs(node, fmt = {}) {
+    let out = '';
+    node.childNodes.forEach(n => {
+      if (n.nodeType === 3) {
+        const t = n.textContent.replace(/\s+/g, ' '); if (!t) return;
+        let pr = '';
+        if (fmt.b) pr += '<w:b/>'; if (fmt.color) pr += `<w:color w:val="${fmt.color}"/>`; if (fmt.sz) pr += `<w:sz w:val="${fmt.sz}"/>`; if (fmt.va) pr += `<w:vertAlign w:val="${fmt.va}"/>`; if (fmt.font) pr += `<w:rFonts w:ascii="${fmt.font}" w:hAnsi="${fmt.font}"/>`;
+        out += `<w:r>${pr ? `<w:rPr>${pr}</w:rPr>` : ''}<w:t xml:space="preserve">${xe(t)}</w:t></w:r>`;
+      } else if (n.nodeType === 1) {
+        const tg = n.tagName.toLowerCase(), f2 = Object.assign({}, fmt);
+        if (tg === 'b' || tg === 'strong') f2.b = true;
+        if (tg === 'sub') f2.va = 'subscript'; if (tg === 'sup') f2.va = 'superscript';
+        if (n.classList.contains('mok')) { f2.color = '1F7A4D'; f2.b = true; } if (n.classList.contains('mno')) { f2.color = 'B42318'; f2.b = true; }
+        if (tg === 'br') { out += '<w:r><w:br/></w:r>'; return; }
+        out += runs(n, f2);
+      }
+    });
+    return out;
+  }
+  const para = (inner, o = {}) => `<w:p><w:pPr>${o.style ? `<w:pStyle w:val="${o.style}"/>` : ''}${o.ind ? `<w:ind w:left="${o.ind}"/>` : ''}${o.jc ? `<w:jc w:val="${o.jc}"/>` : ''}${o.sp ? `<w:spacing w:before="${o.sp[0]}" w:after="${o.sp[1]}"/>` : ''}</w:pPr>${inner}</w:p>`;
+  function table(t) {
+    const small = t.classList.contains('sm'), info = t.classList.contains('mi'), sz = small ? 16 : 19;
+    const rows = [...t.querySelectorAll('tr')];
+    const ncol = Math.max(...rows.map(r => r.children.length));
+    const bd = info ? 'none' : 'single';
+    let x = `<w:tbl><w:tblPr><w:tblW w:w="${info ? 0 : 5000}" w:type="${info ? 'auto' : 'pct'}"/><w:tblBorders>${['top', 'left', 'bottom', 'right', 'insideH', 'insideV'].map(b => `<w:${b} w:val="${bd}" w:sz="4" w:color="B9C3C0"/>`).join('')}</w:tblBorders><w:tblCellMar><w:left w:w="80" w:type="dxa"/><w:right w:w="80" w:type="dxa"/></w:tblCellMar></w:tblPr><w:tblGrid>${'<w:gridCol/>'.repeat(ncol)}</w:tblGrid>`;
+    rows.forEach(r => {
+      const head = r.parentElement.tagName.toLowerCase() === 'thead';
+      x += `<w:tr>${head ? '<w:trPr><w:tblHeader/></w:trPr>' : ''}`;
+      [...r.children].forEach(c => {
+        const left = info || c.classList.contains('l');
+        x += `<w:tc><w:tcPr>${head ? '<w:shd w:val="clear" w:color="auto" w:fill="E6EFEC"/>' : ''}</w:tcPr>${para(runs(c, { b: head, sz, color: info && c === r.children[0] ? '5B6676' : null }), { jc: left ? 'left' : 'right', sp: [20, 20] })}</w:tc>`;
+      });
+      x += '</w:tr>';
+    });
+    return x + '</w:tbl>' + para('', { sp: [0, 60] });
+  }
+  function body(root, imgs) {
+    let x = '', fi = 0;
+    const walk = el => [...el.children].forEach(n => {
+      const tg = n.tagName.toLowerCase();
+      if (n.classList.contains('mfig')) { const im = imgs[fi++]; if (im) { const cx = 5760000, cy = Math.round(cx * im.h / im.w), id = fi; x += `<w:p><w:pPr><w:keepNext/><w:jc w:val="center"/><w:spacing w:before="120" w:after="40"/></w:pPr><w:r><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0"><wp:extent cx="${cx}" cy="${cy}"/><wp:docPr id="${id}" name="Figura ${id}"/><a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="${id}" name="figura${id}.png"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="rIdImg${id}"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${cx}" cy="${cy}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r></w:p>`; } }
+      else if (n.classList.contains('mcap')) x += para(runs(n, { sz: 19, color: '5B6676' }), { jc: 'center', sp: [0, 200] });
+      else if (n.classList.contains('mh-t')) x += para(runs(n, { b: true, sz: 36, color: '1F4E46' }), { sp: [0, 40] });
+      else if (n.classList.contains('mh-s')) x += para(runs(n, { sz: 24 }), { sp: [0, 120] });
+      else if (n.classList.contains('mh')) walk(n);
+      else if (tg === 'h2') x += para(runs(n), { style: 'Ttulo1' });
+      else if (tg === 'h3') x += para(runs(n), { style: 'Ttulo2' });
+      else if (tg === 'table') x += table(n);
+      else if (tg === 'ul') n.querySelectorAll('li').forEach(li => { x += para('<w:r><w:t xml:space="preserve">•  </w:t></w:r>' + runs(li), { ind: 360 }); });
+      else if (n.classList.contains('eq')) x += para(runs(n, { font: 'Cambria' }), { ind: 360 });
+      else if (n.classList.contains('mf')) x += para(runs(n, { sz: 18, color: '5B6676' }), { sp: [240, 0] });
+      else if (n.classList.contains('mw')) x += para(runs(n, { color: '9A5B00' }));
+      else if (tg === 'p') x += para(runs(n));
+      else walk(n);
+    });
+    walk(root);
+    return x;
+  }
+  async function docx(root) {
+    const imgs = await figures(root);
+    const W = 'xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"';
+    const doc = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:document ${W}><w:body>${body(root, imgs)}<w:sectPr><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="1134" w:right="1134" w:bottom="1134" w:left="1417" w:header="709" w:footer="709" w:gutter="0"/></w:sectPr></w:body></w:document>`;
+    const styles = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?><w:styles ${W}><w:docDefaults><w:rPrDefault><w:rPr><w:rFonts w:ascii="Calibri" w:hAnsi="Calibri" w:cs="Calibri"/><w:sz w:val="22"/><w:lang w:val="pt-BR"/></w:rPr></w:rPrDefault><w:pPrDefault><w:pPr><w:spacing w:after="80" w:line="264" w:lineRule="auto"/></w:pPr></w:pPrDefault></w:docDefaults>
+      <w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/></w:style>
+      <w:style w:type="paragraph" w:styleId="Ttulo1"><w:name w:val="heading 1"/><w:basedOn w:val="Normal"/><w:next w:val="Normal"/><w:qFormat/><w:pPr><w:keepNext/><w:spacing w:before="320" w:after="120"/><w:pBdr><w:bottom w:val="single" w:sz="6" w:space="2" w:color="C9D6D2"/></w:pBdr><w:outlineLvl w:val="0"/></w:pPr><w:rPr><w:b/><w:color w:val="1F4E46"/><w:sz w:val="26"/></w:rPr></w:style>
+      <w:style w:type="paragraph" w:styleId="Ttulo2"><w:name w:val="heading 2"/><w:basedOn w:val="Normal"/><w:next w:val="Normal"/><w:qFormat/><w:pPr><w:keepNext/><w:spacing w:before="200" w:after="80"/><w:outlineLvl w:val="1"/></w:pPr><w:rPr><w:b/><w:sz w:val="22"/></w:rPr></w:style></w:styles>`;
+    return zip([
+      ['[Content_Types].xml', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Default Extension="png" ContentType="image/png"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/><Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/></Types>'],
+      ['_rels/.rels', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/></Relationships>'],
+      ['word/_rels/document.xml.rels', '<?xml version="1.0" encoding="UTF-8" standalone="yes"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>' + imgs.map((im, i) => `<Relationship Id="rIdImg${i + 1}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/image" Target="media/figura${i + 1}.png"/>`).join('') + '</Relationships>'],
+      ['word/document.xml', doc],
+      ['word/styles.xml', styles]
+    ].concat(imgs.map((im, i) => [`word/media/figura${i + 1}.png`, im.bytes])));
+  }
+
+  return { build, CSS, wordFile, docx, clipHtml };
+})();
+if (typeof module !== 'undefined' && module.exports) module.exports = { AlasMem };
+
+</script>
+<script>
+(function () {
+  const G = AlasGeo, f = G.f0;
+  // campos: [chave, rótulo, grupo]
+  const GROUPS = [
+    ['Tubo', [['D', 'Diâmetro externo, D']]],
+    ['Testa', [['et', 'Espessura, e<sub>t</sub>'], ['Ht', 'Altura acima da laje, H<sub>t</sub>']]],
+    ['Alas', [['ea', 'Espessura, e<sub>a</sub>'], ['La', 'Comprimento em planta, L<sub>a</sub>'], ['b1', 'Abertura junto à testa, b<sub>1</sub>'], ['b2', 'Abertura na ponta, b<sub>2</sub>'], ['Hp', 'Altura na ponta, H<sub>p</sub>']]],
+    ['Laje de fundo', [['el', 'Espessura, e<sub>l</sub>']]],
+    ['Engrossamento sob a testa', [['eg', 'Espessura total, e<sub>g</sub>'], ['bg', 'Largura, b<sub>g</sub>']]],
+    ['Dente na ponta', [['hd', 'Profundidade abaixo da laje, h<sub>d</sub>'], ['bd', 'Largura, b<sub>d</sub>']]]
+  ];
+  const KEY = 'alas-v1-geo';
+  let state = Object.assign({}, G.DEF);
+  try { const s = JSON.parse(localStorage.getItem(KEY) || 'null'); if (s) Object.keys(G.DEF).forEach(k => { if (typeof s[k] === 'number' && isFinite(s[k])) state[k] = s[k]; }); } catch (e) {}
+  let raw = {};
+
+  const el = id => document.getElementById(id);
+  el('fields').innerHTML = GROUPS.map(([t, fs]) => `<div class="grp"><h3>${t}</h3><div class="grid">${fs.map(([k, lab]) =>
+    `<div class="f" id="f-${k}"><label for="in-${k}">${lab}</label><div class="in"><input id="in-${k}" inputmode="decimal" autocomplete="off" value="${f(state[k])}"><span>cm</span></div><div class="msg" id="m-${k}"></div></div>`).join('')}</div></div>`).join('');
+
+  const parse = s => { const v = parseFloat(String(s).trim().replace(/\s/g, '').replace(',', '.')); return isFinite(v) ? v : NaN; };
+
+  // regras de consistência: [chave, teste(p), mensagem]
+  function validate(p) {
+    const e = {};
+    Object.keys(G.DEF).forEach(k => { if (!(p[k] > 0)) e[k] = 'Informe um valor maior que zero.'; });
+    if (!e.b1 && !e.D && p.b1 < p.D) e.b1 = `A abertura junto à testa deve ser ao menos o diâmetro do tubo (${f(p.D)} cm).`;
+    if (!e.b2 && !e.b1 && p.b2 < p.b1) e.b2 = `A abertura na ponta não pode ser menor que junto à testa (${f(p.b1)} cm).`;
+    if (!e.Ht && !e.D && p.Ht <= p.D) e.Ht = `A testa precisa passar acima do tubo (D = ${f(p.D)} cm).`;
+    if (!e.Hp && !e.Ht && p.Hp > p.Ht) e.Hp = `A altura na ponta não pode passar da altura da testa (${f(p.Ht)} cm).`;
+    if (!e.eg && !e.el && p.eg < p.el) e.eg = `A espessura sob a testa não pode ser menor que a da laje (${f(p.el)} cm).`;
+    if (!e.bd && !e.La && p.bd >= p.La) e.bd = `O dente deve ser menor que o comprimento das alas (${f(p.La)} cm).`;
+    if (!e.bg && !e.La && !e.et && p.bg + (p.eg - p.el) > p.et + p.La - p.bd) e.bg = 'O engrossamento encosta no dente: reduza a largura.';
+    return e;
+  }
+
+  function render() {
+    const p = Object.assign({}, state, raw), errs = validate(p);
+    Object.keys(G.DEF).forEach(k => { el('f-' + k).classList.toggle('bad', !!errs[k]); el('m-' + k).textContent = errs[k] || ''; });
+    const n = Object.keys(errs).length;
+    el('alerts').innerHTML = n ? `<div class="alert">${n === 1 ? 'Um campo precisa' : n + ' campos precisam'} de ajuste. O desenho mostra a última geometria válida.</div>` : '';
+    if (!n) { state = p; raw = {}; try { localStorage.setItem(KEY, JSON.stringify(state)); } catch (e) {} }
+    const q = state, d = G.derive(q);
+    el('fig-plan').innerHTML = G.plan(q, 760, 470);
+    el('fig-cut').innerHTML = G.cut(q, 760, 430);
+    const rows = [
+      ['Comprimento da testa', f(d.Lt) + ' cm'], ['Largura total na ponta', f(d.Btot) + ' cm'], ['Abertura de cada ala', f(d.angDeg) + '°'],
+      ['Comprimento inclinado da ala', f(d.Ls) + ' cm'], ['Comprimento total', f(d.Ltot) + ' cm'], ['Cobrimento acima do tubo', f(d.cob) + ' cm'],
+      ['Altura total na ponta', f(q.Hp + q.el + q.hd) + ' cm'], ['Altura total na testa', f(q.Ht + q.eg) + ' cm']
+    ];
+    el('calc').innerHTML = rows.map(r => `<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join('');
+    renderEsf();
+  }
+
+  /* ----- aba Esforços: solo e empuxos ----- */
+  const E = AlasEsf, SKEY = 'alas-v1-solo';
+  const SFIELDS = [['gs', 'Peso específico, γ', 'kN/m³'], ['phi', 'Ângulo de atrito, φ', '°'], ['sadm', 'Tensão admissível, σ<sub>adm</sub>', 'kPa']];
+  let sstate = Object.assign({}, E.SDEF), sraw = {};
+  try { const s = JSON.parse(localStorage.getItem(SKEY) || 'null'); if (s) Object.keys(E.SDEF).forEach(k => { if (typeof s[k] === 'number' && isFinite(s[k])) sstate[k] = s[k]; }); } catch (e) {}
+  el('fields-esf').innerHTML = `<div class="grp"><h3>Solo</h3><div class="grid">${SFIELDS.map(([k, lab, u]) =>
+    `<div class="f" id="f-${k}"><label for="in-${k}">${lab}</label><div class="in"><input id="in-${k}" inputmode="decimal" autocomplete="off" value="${f(sstate[k])}"><span>${u}</span></div><div class="msg" id="m-${k}"></div></div>`).join('')}</div></div>`;
+  function validateSoil(s) {
+    const e = {};
+    if (!(s.gs > 0)) e.gs = 'Informe um valor maior que zero.'; else if (s.gs > 30) e.gs = 'Confira o valor: solos ficam entre 14 e 22 kN/m³.';
+    if (!(s.phi > 0) || s.phi >= 60) e.phi = 'Informe um ângulo entre 0° e 60°.';
+    if (!(s.sadm > 0)) e.sadm = 'Informe um valor maior que zero.';
+    return e;
+  }
+  let lastR = null;
+  function renderEsf() {
+    const s = Object.assign({}, sstate, sraw), errs = validateSoil(s);
+    Object.keys(E.SDEF).forEach(k => { el('f-' + k).classList.toggle('bad', !!errs[k]); el('m-' + k).textContent = errs[k] || ''; });
+    const n = Object.keys(errs).length;
+    el('alerts-esf').innerHTML = n ? `<div class="alert">${n === 1 ? 'Um campo precisa' : n + ' campos precisam'} de ajuste. Os esforços usam os últimos valores válidos.</div>` : '';
+    if (!n) { sstate = s; sraw = {}; try { localStorage.setItem(SKEY, JSON.stringify(sstate)); } catch (e) {} }
+    const q = state, R = E.calc(q, sstate), x2 = v => E.fx(v, 2);
+    el('calc-esf').innerHTML = [
+      ['Ativo, K<sub>a</sub> = tg²(45° − φ/2)', E.fx(R.Ka, 4)], ['Passivo, K<sub>p</sub> = tg²(45° + φ/2)', E.fx(R.Kp, 4)]
+    ].map(r => `<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join('');
+    el('verif').innerHTML = `<div class="verif ${R.ok ? 'ok' : 'no'}"><span>E<sub>p</sub> ÷ E<sub>a</sub> = ${x2(R.Ep)} ÷ ${x2(R.Ea)} = <b>${x2(R.FS)}</b> ${R.ok ? '≥' : '<'} 1,00</span><span>${R.ok ? 'O passivo no dente equilibra o ativo na testa.' : 'O passivo no dente não equilibra o ativo: aumente a profundidade do dente.'}</span></div>`;
+    const wt = R.wt, kgf = v => E.fx(v / 98.0665, 2);
+    el('verif-solo').innerHTML = `<div class="verif ${R.soilOk ? 'ok' : 'no'}"><span>σ = ${x2(wt.W)} kN ÷ ${x2(wt.A)} m² = <b>${x2(wt.sigma)} kPa</b> ${R.soilOk ? '≤' : '>'} ${f(R.sadm)} kPa</span><span>${x2(wt.sigma)} kPa = ${kgf(wt.sigma)} kgf/cm². ${R.soilOk ? 'O solo suporta a estrutura.' : 'A tensão passa da admissível: aumente a área de apoio ou melhore o solo.'}</span></div>`;
+    el('tab-solo').innerHTML = `<table class="res"><thead><tr><th class="l">Parte</th><th class="l">Base do volume</th><th>Volume (m³)</th><th>Peso (kN)</th></tr></thead><tbody>${wt.parts.map(x => `<tr><td class="l">${x.nm}</td><td class="l">${x.obs}</td><td>${E.fx(x.V, 3)}</td><td>${x2(x.W)}</td></tr>`).join('')}
+      <tr><td class="l"><b>Total</b></td><td class="l"></td><td><b>${E.fx(wt.V, 3)}</b></td><td><b>${x2(wt.W)}</b></td></tr>
+      <tr><td class="l">Área de apoio</td><td class="l">contorno externo em planta</td><td>${x2(wt.A)} m²</td><td></td></tr>
+      <tr><td class="l">Tensão média no solo</td><td class="l">σ = peso ÷ área</td><td>${x2(wt.sigma)} kPa</td><td><span class="pill ${R.soilOk ? 'ok' : 'no'}">${R.soilOk ? '≤ σadm, atende' : '> σadm, não atende'}</span></td></tr></tbody></table>`;
+    el('fig-emp').innerHTML = E.cutLoads(q, R, 760, 430);
+    lastR = R;
+    el('fig-ala').innerHTML = E.wingChart(q, R, 760, 470);
+    const c = x2;
+    const rowsE = [
+      ['Ativo na testa', f(q.Ht + q.eg), c(R.pa), c(R.Ea), f(R.d.Lt), c(R.EaT)],
+      ['Passivo no dente', f(q.el + q.hd), c(R.pp), c(R.Ep), f(R.d.Btot), c(R.EpT)]
+    ];
+    const rowsP = [
+      ['Testa', R.testa], ['Ala, junto à testa', R.ala0], ['Ala, na ponta', R.ala1]
+    ];
+    el('tab-esf-res').innerHTML =
+      `<table class="res"><thead><tr><th class="l">Empuxo</th><th>Altura de solo (cm)</th><th>Pressão na base (kPa)</th><th>Resultante (kN/m)</th><th>Largura (cm)</th><th>Total (kN)</th></tr></thead><tbody>${rowsE.map(r => `<tr><td class="l">${r[0]}</td>${r.slice(1).map(v => `<td>${v}</td>`).join('')}</tr>`).join('')}
+       <tr><td class="l">Equilíbrio por metro</td><td></td><td></td><td>E<sub>p</sub> ÷ E<sub>a</sub> = ${c(R.FS)}</td><td></td><td><span class="pill ${R.ok ? 'ok' : 'no'}">${R.ok ? 'atende' : 'não atende'}</span></td></tr></tbody></table>
+       <table class="res" style="margin-top:12px"><thead><tr><th class="l">Parede engastada na laje</th><th>Altura de solo, h (cm)</th><th>Pressão na base (kPa)</th><th>M na base (kN·m/m)</th><th>V na base (kN/m)</th></tr></thead><tbody>${rowsP.map(([nm, x]) => `<tr><td class="l">${nm}</td><td>${f(Math.round(x.h * 1000) / 10)}</td><td>${c(x.p)}</td><td>${c(x.M)}</td><td>${c(x.V)}</td></tr>`).join('')}</tbody></table>`;
+    renderArm();
+  }
+  Object.keys(E.SDEF).forEach(k => {
+    const inp = el('in-' + k);
+    inp.addEventListener('input', () => { sraw[k] = parse(inp.value); renderEsf(); });
+    inp.addEventListener('blur', () => { if (!el('f-' + k).classList.contains('bad')) inp.value = f(sstate[k]); });
+    inp.addEventListener('keydown', ev => {
+      if (ev.key !== 'ArrowUp' && ev.key !== 'ArrowDown') return;
+      ev.preventDefault();
+      const v = parse(inp.value), step = (ev.shiftKey ? 5 : 1) * (ev.key === 'ArrowUp' ? 1 : -1);
+      inp.value = f(Math.max(0, (isFinite(v) ? v : sstate[k]) + step)); sraw[k] = parse(inp.value); renderEsf();
+    });
+  });
+
+  Object.keys(G.DEF).forEach(k => {
+    const inp = el('in-' + k);
+    inp.addEventListener('input', () => { raw[k] = parse(inp.value); render(); });
+    inp.addEventListener('blur', () => { if (!el('f-' + k).classList.contains('bad')) inp.value = f(state[k]); });
+    // setas do teclado: ±1 cm (Shift: ±5 cm)
+    inp.addEventListener('keydown', ev => {
+      if (ev.key !== 'ArrowUp' && ev.key !== 'ArrowDown') return;
+      ev.preventDefault();
+      const v = parse(inp.value), step = (ev.shiftKey ? 5 : 1) * (ev.key === 'ArrowUp' ? 1 : -1);
+      inp.value = f(Math.max(0, (isFinite(v) ? v : state[k]) + step)); raw[k] = parse(inp.value); render();
+    });
+  });
+  el('reset').addEventListener('click', () => { state = Object.assign({}, G.DEF); raw = {}; Object.keys(G.DEF).forEach(k => { el('in-' + k).value = f(state[k]); }); render(); });
+
+
+  /* ----- aba Armaduras ----- */
+  const AR = AlasArm, AKEY = 'alas-v1-arm';
+  let astate = Object.assign({}, AR.DEF);
+  try { const s = JSON.parse(localStorage.getItem(AKEY) || 'null'); if (s) Object.keys(AR.DEF).forEach(k => { if (s[k] != null && (typeof s[k] === typeof AR.DEF[k])) astate[k] = s[k]; }); } catch (e) {}
+  const sel = (id, opts, val) => `<select id="in-${id}">${opts.map(([v, t]) => `<option value="${v}"${String(v) === String(val) ? ' selected' : ''}>${t}</option>`).join('')}</select>`;
+  const fld = (id, lab, inner, unit) => `<div class="f" id="f-${id}"><label for="in-${id}">${lab}</label><div class="in">${inner}${unit ? `<span>${unit}</span>` : ''}</div><div class="msg" id="m-${id}"></div></div>`;
+  const numIn = (id, v) => `<input id="in-${id}" inputmode="decimal" autocomplete="off" value="${f(v)}">`;
+  el('fields-arm').innerHTML =
+    `<div class="grp"><h3>Concreto e ambiente</h3><div class="grid">` +
+      fld('fck', 'Resistência do concreto, f<sub>ck</sub>', sel('fck', [20, 25, 30, 35, 40, 45, 50].map(v => [v, 'C' + v]), astate.fck), 'MPa') +
+      fld('cob', 'Cobrimento nominal, c', numIn('cob', astate.cob), 'cm') +
+    `</div><div class="grid" style="grid-template-columns:minmax(0,1fr);margin-top:6px">` +
+      fld('caa', 'Classe de agressividade ambiental', sel('caa', Object.entries(AR.CAA).map(([k, x]) => [k, x.nome]), astate.caa), '') +
+    `</div></div>` +
+    AR.ELEM.map(([k, nome, obs]) => `<div class="grp"><h3>${nome}${obs ? ` <span style="text-transform:none;letter-spacing:0;color:var(--muted);font-weight:400">· ${obs}</span>` : ''}</h3><div class="grid">` +
+      fld(k + '_phi', 'Bitola, ø', sel(k + '_phi', AR.BITOLAS.map(v => [v, f(v)]), astate[k + '_phi']), 'mm') +
+      fld(k + '_s', 'Espaçamento, s', numIn(k + '_s', astate[k + '_s']), 'cm') + `</div></div>`).join('');
+  let araw = {};
+  function validateArm(a) {
+    const e = {};
+    if (!(a.cob > 0) || a.cob > 10) e.cob = 'Informe um cobrimento entre 0 e 10 cm.';
+    AR.ELEM.forEach(([k]) => { if (!(a[k + '_s'] >= 5) || a[k + '_s'] > 50) e[k + '_s'] = 'Informe um espaçamento entre 5 e 50 cm.'; });
+    return e;
+  }
+  function renderArm() {
+    if (!lastR) return;
+    const a = Object.assign({}, astate, araw), errs = validateArm(a);
+    ['cob'].concat(AR.ELEM.map(([k]) => k + '_s')).forEach(k => { el('f-' + k).classList.toggle('bad', !!errs[k]); el('m-' + k).textContent = errs[k] || ''; });
+    const n = Object.keys(errs).length;
+    el('alerts-arm').innerHTML = n ? `<div class="alert">${n === 1 ? 'Um campo precisa' : n + ' campos precisam'} de ajuste. O dimensionamento usa os últimos valores válidos.</div>` : '';
+    if (!n) { astate = a; araw = {}; try { localStorage.setItem(AKEY, JSON.stringify(astate)); } catch (e) {} }
+    const A = AR.check(state, lastR, astate), x2 = v => E.fx(v, 2), ok = b => `<span class="pill ${b ? 'ok' : 'no'}">${b ? 'ok' : 'não'}</span>`;
+    const bad = A.rows.filter(r => !r.ok).map(r => r.nome.toLowerCase());
+    el('verif-arm').innerHTML = `<div class="verif ${A.ok && !A.warn.length ? 'ok' : 'no'}"><span>${A.ok ? 'As três armaduras atendem às verificações.' : 'Não atende: ' + bad.join(', ') + '. Veja a tabela.'}</span>${A.warn.map(w => `<span>${w}</span>`).join('')}</div>`;
+    el('fig-arm').innerHTML = AR.cutBars(state, A, astate);
+    const BB = AR.bars(state, astate), rw = key => A.rows.find(x => x.k === key), R0 = v => f(Math.round(v));
+    lastA = A;
+    renderMem();
+    el('arm-pos').innerHTML = `<table class="res"><thead><tr><th class="l">Posição</th><th class="l">Elemento</th><th class="l">Armadura</th><th class="l">Forma</th><th>Dobra + reto + dobra (cm)</th><th>Cada barra (cm)</th><th>Barras por estribo</th></tr></thead><tbody>${BB.map(b => `<tr><td class="l"><b style="color:var(${b.n === 'N4' ? '--aco2' : '--aco'})">${b.n}</b></td><td class="l">${b.el}</td><td class="l">ø${f(rw(b.k).phi)} c/${f(rw(b.k).s)}</td><td class="l" style="white-space:normal;min-width:240px">${b.form}</td><td>${R0(b.dob)} + ${R0(b.reto)}${b.reto1 != null ? ' a ' + R0(b.reto1) : ''} + ${R0(b.dob)}</td><td>${R0(b.L)}${b.Lmin != null ? ' a ' + R0(b.Lmin) : ''}</td><td>2</td></tr>`).join('')}</tbody></table>`;
+    const head = ['Elemento', 'Armadura', 'h (cm)', 'd (cm)', 'M<sub>k</sub> (kN·m/m)', 'M<sub>d</sub> (kN·m/m)', 'x/d', 'A<sub>s,nec</sub> (cm²/m)', 'A<sub>s,mín</sub> (cm²/m)', 'A<sub>s,ef</sub> (cm²/m)', 'Flexão', 'Mínima', 's ≤ ' + 's<sub>máx</sub>', 'ø ≤ h/8', 'V<sub>Sd</sub> (kN/m)', 'V<sub>Rd1</sub> (kN/m)', 'Cortante'];
+    el('arm-res').innerHTML = `<table class="res"><thead><tr>${head.map((x, i) => `<th${i < 2 ? ' class="l"' : ''}>${x}</th>`).join('')}</tr></thead><tbody>${A.rows.map(r => `<tr>
+      <td class="l">${r.nome}<br><span style="color:var(--muted);font-size:11px">${r.orig}</span></td><td class="l"><b>ø${f(r.phi)} c/${f(r.s)}</b></td>
+      <td>${f(r.h)}</td><td>${x2(r.d)}</td><td>${x2(r.Mk)}</td><td>${x2(r.Md)}</td><td>${isFinite(r.xd) ? E.fx(r.xd, 3) : '—'}</td>
+      <td>${isFinite(r.As) ? x2(r.As) : '—'}</td><td>${x2(r.Asmin)}</td><td><b>${x2(r.Asef)}</b></td>
+      <td>${ok(r.it.flex)}</td><td>${ok(r.it.min)}</td><td>${ok(r.it.esp)} <span style="color:var(--muted)">${f(r.sMax)}</span></td><td>${ok(r.it.bit)} <span style="color:var(--muted)">${f(r.phiMax)}</span></td>
+      <td>${r.Vd == null ? '—' : x2(r.Vd)}</td><td>${r.Vd == null ? '—' : x2(r.VR)}</td><td>${r.Vd == null ? '—' : ok(r.it.cort)}</td></tr>`).join('')}</tbody></table>`;
+  }
+  ['fck', 'caa'].concat(AR.ELEM.map(([k]) => k + '_phi')).forEach(k => el('in-' + k).addEventListener('change', ev => {
+    const v = ev.target.value; araw[k] = k === 'caa' ? v : parseFloat(v);
+    if (k === 'caa') { const sug = AR.CAA[v].cob; if ((astate.cob || 0) < sug) { el('in-cob').value = f(sug); araw.cob = sug; } }
+    renderArm();
+  }));
+  ['cob'].concat(AR.ELEM.map(([k]) => k + '_s')).forEach(k => {
+    const inp = el('in-' + k);
+    inp.addEventListener('input', () => { araw[k] = parse(inp.value); renderArm(); });
+    inp.addEventListener('blur', () => { if (!el('f-' + k).classList.contains('bad')) inp.value = f(astate[k]); });
+  });
+
+  /* ----- aba Memorial ----- */
+  const MKEY = 'alas-v1-mem';
+  let lastA = null, info = { obra: '', local: '', resp: '' };
+  try { const s = JSON.parse(localStorage.getItem(MKEY) || 'null'); if (s) Object.keys(info).forEach(k => { if (typeof s[k] === 'string') info[k] = s[k]; }); } catch (e) {}
+  { const st = document.createElement('style'); st.textContent = AlasMem.CSS; document.head.appendChild(st); }
+  ['obra', 'local', 'resp'].forEach(k => { const inp = el('in-' + k); inp.value = info[k]; inp.addEventListener('input', () => { info[k] = inp.value; try { localStorage.setItem(MKEY, JSON.stringify(info)); } catch (e) {} renderMem(); }); });
+  function renderMem() {
+    if (!lastR || !lastA) return;
+    el('mem-doc').innerHTML = AlasMem.build({ p: state, soil: sstate, R: lastR, a: astate, A: lastA, info });
+  }
+  const say = t => { el('mem-msg').textContent = t; clearTimeout(say.t); say.t = setTimeout(() => { el('mem-msg').textContent = ''; }, 6000); };
+  el('mem-copy').addEventListener('click', async () => {
+    const text = el('mem-doc').innerText, htmlP = AlasMem.clipHtml(el('mem-doc')).then(x => new Blob([x], { type: 'text/html' }));
+    try {
+      if (!window.ClipboardItem || !navigator.clipboard || !navigator.clipboard.write) throw new Error('sem ClipboardItem');
+      await navigator.clipboard.write([new ClipboardItem({ 'text/html': htmlP, 'text/plain': new Blob([text], { type: 'text/plain' }) })]);
+      say('Memorial copiado. Cole no Word com Ctrl+V.');
+    } catch (e) {
+      try {
+        const r = document.createRange(); r.selectNodeContents(el('mem-doc')); const sel = window.getSelection(); sel.removeAllRanges(); sel.addRange(r);
+        const ok = document.execCommand && document.execCommand('copy');
+        say(ok ? 'Memorial copiado. Cole no Word com Ctrl+V.' : 'O memorial ficou selecionado: copie com Ctrl+C e cole no Word.');
+      } catch (e2) { say('Não foi possível copiar automaticamente: selecione o memorial e copie com Ctrl+C.'); }
+    }
+  });
+  let dlNs;   // capacidade de download do Claude (null fora dele)
+  (async () => { try { dlNs = window.claude && window.claude.use ? await window.claude.use('downloads') : null; } catch (e) { dlNs = null; } })();
+  el('mem-doc-dl').addEventListener('click', async () => {
+    let blob; const name = 'memorial-alas.docx';
+    try { blob = await AlasMem.docx(el('mem-doc')); } catch (e) { say('Não foi possível montar o Word: ' + (e && e.message || e)); return; }
+    if (dlNs) {
+      try { await dlNs.save({ filename: name, data: blob }); say('Memorial salvo como ' + name + '.'); }
+      catch (e) { say(e && e.code === 'declined' ? 'Download cancelado.' : 'O download não está disponível aqui: use Copiar para o Word.'); }
+      return;
+    }
+    try {
+      const url = URL.createObjectURL(blob), lk = document.createElement('a');
+      lk.href = url; lk.download = name; document.body.appendChild(lk); lk.click(); lk.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 4000);
+      say('Download do ' + name + ' iniciado.');
+    } catch (e) { say('O download não está disponível aqui: use Copiar para o Word.'); }
+  });
+
+  // abas
+  const PH = {};
+  document.querySelectorAll('nav.tabs button').forEach(b => b.addEventListener('click', () => {
+    document.querySelectorAll('nav.tabs button').forEach(x => x.setAttribute('aria-selected', String(x === b)));
+    const t = b.dataset.tab;
+    el('pane-geo').hidden = t !== 'geo'; el('pane-esf').hidden = t !== 'esf'; el('pane-arm').hidden = t !== 'arm'; el('pane-mem').hidden = t !== 'mem'; el('pane-other').hidden = !PH[t];
+    if (PH[t]) { el('ph-title').textContent = PH[t][0]; el('ph-text').textContent = PH[t][1]; }
+  }));
+
+  render();
+})();
+</script>
